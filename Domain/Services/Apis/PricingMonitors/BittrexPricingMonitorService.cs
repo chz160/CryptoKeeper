@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using CryptoKeeper.Domain.Builders.Factories;
@@ -9,7 +8,7 @@ using CryptoKeeper.Domain.DataObjects.Dtos;
 using CryptoKeeper.Domain.DataObjects.Dtos.BitTrex;
 using CryptoKeeper.Domain.Services.Interfaces;
 
-namespace CryptoKeeper.Domain.Services.Apis
+namespace CryptoKeeper.Domain.Services.Apis.PricingMonitors
 {
     public class BittrexPricingMonitorService : IAmPricingMonitor
     {

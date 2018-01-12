@@ -1,10 +1,9 @@
-﻿using System.Threading;
-using CryptoKeeper.Domain.Builders.Factories;
+﻿using CryptoKeeper.Domain.Builders.Factories;
 using CryptoKeeper.Domain.Builders.Interfaces;
 using CryptoKeeper.Domain.DataObjects.Dtos;
 using CryptoKeeper.Domain.Services.Interfaces;
 
-namespace CryptoKeeper.Domain.Services.Apis
+namespace CryptoKeeper.Domain.Services.Apis.PricingMonitors
 {
     public class YobitPricingMonitorService : IAmPricingMonitor
     {
@@ -36,17 +35,17 @@ namespace CryptoKeeper.Domain.Services.Apis
             //    Thread.Sleep(60000);
             //}
 
-            while (true)
-            {
-                Thread.Sleep(60000);
-                foreach (var coin in _exchange.Coins)
-                {
-                    foreach (var childCoin in coin.Coins)
-                    {
-                        PricingService.Instance.GetCurrentPrice(_exchange.Name, coin.Symbol, childCoin.Symbol);
-                    }
-                }
-            }
+            //while (true)
+            //{
+            //    Thread.Sleep(60000);
+            //    foreach (var coin in _exchange.Coins)
+            //    {
+            //        foreach (var childCoin in coin.Coins)
+            //        {
+            //            PricingService.Instance.GetCurrentPrice(_exchange.Name, coin.Symbol, childCoin.Symbol);
+            //        }
+            //    }
+            //}
         }
 
         //private void DownloadPricingEveryMinute(Exchange exchange)

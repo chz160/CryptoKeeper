@@ -1,23 +1,29 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Reflection.Metadata.Ecma335;
+using System.Text;
 using System.Threading;
 using CryptoKeeper.Domain.Builders.Factories;
 using CryptoKeeper.Domain.Builders.Interfaces;
 using CryptoKeeper.Domain.DataObjects.Dtos;
 using CryptoKeeper.Domain.DataObjects.Dtos.CryptoCompare;
 using CryptoKeeper.Domain.DataObjects.Params;
+using CryptoKeeper.Domain.Enums;
 using CryptoKeeper.Domain.Extensions;
-using CryptoKeeper.Domain.Services.Apis;
+using CryptoKeeper.Domain.Services.Apis.PricingMonitors;
 using CryptoKeeper.Domain.Services.Factories;
 using CryptoKeeper.Domain.Services.Interfaces;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using Quobject.SocketIoClientDotNet.Client;
 
 namespace CryptoKeeper.Domain.Services
 {
-    public sealed class PricingService
+    public sealed partial class PricingService
     {
+        private Socket _cryptoCompareSocket;
         private readonly object lockObject = new object();
         private static readonly Lazy<PricingService> lazy = new Lazy<PricingService>(() => new PricingService());
         private readonly ConcurrentDictionary<string, List<PricingItem>> _coinPricing = new ConcurrentDictionary<string, List<PricingItem>>();
@@ -149,30 +155,42 @@ namespace CryptoKeeper.Domain.Services
                         GetPriceHistory(exchange.Name, coin.Symbol, childCoin.Symbol, ((DateTimeOffset)DateTime.UtcNow).ToUnixTimeSeconds());
                     }
                 }
-                var thread = new Thread(() => new ExchangeApiServiceFactory().Create(exchange).MonitorPrices().Monitor());
-                thread.IsBackground = true;
-                thread.Name = string.Format("PricingThread{0}", counter);
-                _threads.Add(thread);
-                thread.Start();
+
+                var priceMonitor = new ExchangeApiServiceFactory().Create(exchange).MonitorPrices();
+                if (priceMonitor.GetType() != typeof(NullMonitorService))
+                {
+                    var thread = new Thread(() => priceMonitor.Monitor());
+                    thread.IsBackground = true;
+                    thread.Name = string.Format("PricingThread{0}", counter);
+                    _threads.Add(thread);
+                    thread.Start();
+                }
             }
+
+            var cryptoThread = new Thread(() => ListenToCryptoCompareTicker(exchangePairParam.Exchanges));
+            cryptoThread.IsBackground = true;
+            cryptoThread.Name = string.Format("PricingThread{0}", ++counter);
+            _threads.Add(cryptoThread);
+            cryptoThread.Start();
+
             Console.WriteLine("Done.");
         }
 
-        private void DownloadPricingEveryMinute(Exchange exchange)
-        {
-            while (true)
-            {
-                Thread.Sleep(60000);
-                foreach (var coin in exchange.Coins)
-                {
-                    foreach (var childCoin in coin.Coins)
-                    {
-                        //Console.WriteLine($"Thread {exchange.Name}_{coin.Symbol}_{childCoin.Symbol}");
-                        GetCurrentPrice(exchange.Name, coin.Symbol, childCoin.Symbol);
-                    }
-                }
-            }
-        }
+        //private void DownloadPricingEveryMinute(Exchange exchange)
+        //{
+        //    while (true)
+        //    {
+        //        Thread.Sleep(60000);
+        //        foreach (var coin in exchange.Coins)
+        //        {
+        //            foreach (var childCoin in coin.Coins)
+        //            {
+        //                //Console.WriteLine($"Thread {exchange.Name}_{coin.Symbol}_{childCoin.Symbol}");
+        //                GetCurrentPrice(exchange.Name, coin.Symbol, childCoin.Symbol);
+        //            }
+        //        }
+        //    }
+        //}
 
         public void UpdateExchangeCoinPrices(List<Exchange> exchanges)
         {
@@ -235,6 +253,51 @@ namespace CryptoKeeper.Domain.Services
         {
             var api = new ExchangeApiServiceFactory().Create(exchange);
             return api.TakerFee;
+        }
+
+
+        public void ListenToCryptoCompareTicker(List<Exchange> exchanges)
+        {
+            var subParams = BuildCryptoTickerSubscriptionParameters(exchanges);
+            var subParamsString = string.Join(",", subParams);
+            var subscribeParam = $@"{{ subs: [{subParamsString}]}}";
+            _cryptoCompareSocket = IO.Socket("wss://streamer.cryptocompare.com");
+            _cryptoCompareSocket.On(Socket.EVENT_CONNECT, () =>
+            {
+                _cryptoCompareSocket.Emit("SubAdd", JObject.Parse(subscribeParam) );
+            });
+
+            _cryptoCompareSocket.On("m", (data) =>
+            {
+                if (data != null && !string.IsNullOrEmpty(data.ToString()))
+                {
+                    var dataArray = data.ToString().Split('~');
+                    if (dataArray.Length >= 7 && dataArray[0] == "2")
+                    {
+                        //File.AppendAllLines(@"C:\temp\socketdata.txt", new List<string> { data.ToString() }, Encoding.UTF8);
+                        var currentTicker = _builderFactory.Create<string[], TickerDto>(dataArray).Build();
+                        //Console.WriteLine(JsonConvert.SerializeObject(currentTicker));
+                        var pricingItem = _builderFactory.Create<TickerDto, PricingItem>(currentTicker).Build();
+                        UpdatePricingForMinute(currentTicker.Market, currentTicker.FromSymbol, currentTicker.ToSymbol, pricingItem);
+                    }
+                }
+            });
+        }
+        
+        private List<string> BuildCryptoTickerSubscriptionParameters(List<Exchange> exchanges)
+        {
+            var results = new List<string>();
+            foreach (var exchange in exchanges.Where(m=> new ExchangeApiServiceFactory().Create(m).PricingApiType == PricingApiType.CryptoCompare))
+            {
+                foreach (var coin in exchange.Coins)
+                {
+                    foreach (var childCoin in coin.Coins)
+                    {
+                        results.Add($"'2~{exchange.Name}~{coin.Symbol}~{childCoin.Symbol}'");
+                    }
+                }
+            }
+            return results;
         }
     }
 }

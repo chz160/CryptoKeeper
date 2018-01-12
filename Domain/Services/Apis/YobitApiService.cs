@@ -8,6 +8,7 @@ using CryptoKeeper.Domain.Constants;
 using CryptoKeeper.Domain.DataObjects.Dtos;
 using CryptoKeeper.Domain.DataObjects.Dtos.Yobit;
 using CryptoKeeper.Domain.Enums;
+using CryptoKeeper.Domain.Services.Apis.PricingMonitors;
 using CryptoKeeper.Domain.Services.Interfaces;
 
 namespace CryptoKeeper.Domain.Services.Apis
@@ -60,7 +61,8 @@ namespace CryptoKeeper.Domain.Services.Apis
                 new WithdrawalFee {Symbol = "PPC", Fee = 0.2m},
                 new WithdrawalFee {Symbol = "DASH", Fee = 0.002m},
                 new WithdrawalFee {Symbol = "VIA", Fee = 0.002m},
-                new WithdrawalFee {Symbol = "DGB", Fee = 0.002m}
+                new WithdrawalFee {Symbol = "DGB", Fee = 0.002m},
+                new WithdrawalFee {Symbol = "ZEC", Fee = 0.002m}
             };
         }
 

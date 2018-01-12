@@ -9,12 +9,13 @@ using CryptoKeeper.Domain.Constants;
 using CryptoKeeper.Domain.DataObjects.Dtos;
 using CryptoKeeper.Domain.DataObjects.Dtos.BitTrex;
 using CryptoKeeper.Domain.Enums;
+using CryptoKeeper.Domain.Services.Apis.PricingMonitors;
 using CryptoKeeper.Domain.Services.Interfaces;
 
 namespace CryptoKeeper.Domain.Services.Apis
 {
     //Docs https://bittrex.com/home/api
-    public class BittrexApiService : ApiService
+    public class BitTrexApiService : ApiService
     {
         public override string Name => ExchangeConstants.BitTrex;
         public override string PublicUrl => "https://bittrex.com/api/v1.1";

@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using CryptoKeeper.Domain.DataObjects.Dtos;
-using CryptoKeeper.Domain.DataObjects.Dtos.Coinbase;
-using CryptoKeeper.Domain.DataObjects.Dtos.CryptoCompare;
+using CryptoKeeper.Domain.Mappers.CryptoCompare;
 using CryptoKeeper.Domain.Mappers.Interfaces;
 
 namespace CryptoKeeper.Domain.Mappers.Factories
@@ -23,8 +22,9 @@ namespace CryptoKeeper.Domain.Mappers.Factories
             {
                 return new CoinExchangeMapper() as IUpdateMapper<SOURCETYPE, TOTYPE>;
             }
-            if (typeof(SOURCETYPE) == typeof(HistoMinuteItem) && typeof(TOTYPE) == typeof(PricingItem) ||
-                typeof(SOURCETYPE) == typeof(TickerChannelDto) && typeof(TOTYPE) == typeof(PricingItem) ||
+            if (typeof(SOURCETYPE) == typeof(DataObjects.Dtos.CryptoCompare.HistoMinuteItem) && typeof(TOTYPE) == typeof(PricingItem) ||
+                typeof(SOURCETYPE) == typeof(DataObjects.Dtos.Coinbase.TickerChannelDto) && typeof(TOTYPE) == typeof(PricingItem) ||
+                typeof(SOURCETYPE) == typeof(DataObjects.Dtos.CryptoCompare.TickerDto) && typeof(TOTYPE) == typeof(PricingItem) ||
                 typeof(SOURCETYPE) == typeof(DataObjects.Dtos.BitTrex.MarketSummaryDto) && typeof(TOTYPE) == typeof(PricingItem))
             {
                 return new PricingItemMapper() as IUpdateMapper<SOURCETYPE, TOTYPE>;
@@ -33,6 +33,10 @@ namespace CryptoKeeper.Domain.Mappers.Factories
                 typeof(SOURCETYPE) == typeof(KeyValuePair<string, DataObjects.Dtos.Poloniex.CurrencyDto>) && typeof(TOTYPE) == typeof(WithdrawalFee))
             {
                 return new WithdrawalFeeMapper() as IUpdateMapper<SOURCETYPE, TOTYPE>;
+            }
+            if (typeof(SOURCETYPE) == typeof(string[]) && typeof(TOTYPE) == typeof(DataObjects.Dtos.CryptoCompare.TickerDto))
+            {
+                return new TickerDtoMapper() as IUpdateMapper<SOURCETYPE, TOTYPE>;
             }
             throw new ArgumentException("Couldn't create builder!");
         }

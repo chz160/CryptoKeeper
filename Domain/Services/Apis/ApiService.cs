@@ -17,14 +17,16 @@ namespace CryptoKeeper.Domain.Services.Apis
     public abstract class ApiService : IAmAnApiService
     {
         protected readonly IConfigService _configService;
+        private readonly ICryptoCompareDataService _cryptoCompareDataService;
         protected readonly ApiConfigurationData _configurationData;
 
-        public ApiService() : this(new ConfigService())
+        public ApiService() : this(new ConfigService(), new CryptoCompareDataService())
         { }
 
-        public ApiService(IConfigService configService)
+        public ApiService(IConfigService configService, ICryptoCompareDataService cryptoCompareDataService)
         {
             _configService = configService;
+            _cryptoCompareDataService = cryptoCompareDataService;
             _configurationData = configService.GetApiConfigurationForExchange(Name);
         }
         public abstract string Name { get; }
@@ -153,6 +155,10 @@ namespace CryptoKeeper.Domain.Services.Apis
         }
 
         public abstract decimal GetBalances(string symbol);
-        public abstract void GetProducts(Exchange exchange, List<string> eligibleSymbols);
+
+        public virtual void GetProducts(Exchange exchange, List<string> eligibleSymbols)
+        {
+            _cryptoCompareDataService.GetExchangeCoins(null, null, new List<Exchange> { exchange }, eligibleSymbols);
+        }
     }
 }

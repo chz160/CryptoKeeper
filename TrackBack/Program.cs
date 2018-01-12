@@ -11,6 +11,7 @@ namespace CryptoKeeper.TrackBack
             var primaryCoin = SymbolConstants.Btc;
             var valueCoin = new []{ SymbolConstants.Usd, SymbolConstants.Usdt };
             var initalInvestment = 1000m;
+            new SplashScreenService().ShowSplashScreen();
             new TradingService(exchangeCurrentlyHoldingFunds, primaryCoin, valueCoin, initalInvestment).Trade();
         }
     }

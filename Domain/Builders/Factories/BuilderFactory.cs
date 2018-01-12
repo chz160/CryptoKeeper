@@ -17,6 +17,8 @@ namespace CryptoKeeper.Domain.Builders.Factories
                 return new CoinBuilder(fromtype as Coin) as IBuilder<TOTYPE>;
             }
             if (typeof(FROMTYPE) == typeof(HistoMinuteItem) && typeof(TOTYPE) == typeof(PricingItem) ||
+                typeof(FROMTYPE) == typeof(string[]) && typeof(TOTYPE) == typeof(TickerDto) ||
+                typeof(FROMTYPE) == typeof(TickerDto) && typeof(TOTYPE) == typeof(PricingItem) ||
                 typeof(FROMTYPE) == typeof(TickerChannelDto) && typeof(TOTYPE) == typeof(PricingItem) ||
                 typeof(FROMTYPE) == typeof(DataObjects.Dtos.BitTrex.MarketSummaryDto) && typeof(TOTYPE) == typeof(PricingItem) ||
                 typeof(FROMTYPE) == typeof(DataObjects.Dtos.BitTrex.CurrencyDto) && typeof(TOTYPE) == typeof(WithdrawalFee) ||
@@ -25,7 +27,7 @@ namespace CryptoKeeper.Domain.Builders.Factories
             {
                 return new CreationBuilder<FROMTYPE, TOTYPE>(fromtype) as IBuilder<TOTYPE>;
             }
-            throw new ArgumentException("Couldn't create builder!");
+            throw new ArgumentException($"Couldn't create builder for {typeof(FROMTYPE)} and {typeof(TOTYPE)}!");
         }
 
         public IBuilder<IEnumerable<TOTYPE>> CreateCollection<FROMTYPE, TOTYPE>(IEnumerable<FROMTYPE> fromtype) where TOTYPE : class, new()

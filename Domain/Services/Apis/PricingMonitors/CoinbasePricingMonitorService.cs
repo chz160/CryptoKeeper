@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.WebSockets;
@@ -13,7 +12,7 @@ using CryptoKeeper.Domain.DataObjects.Dtos.Coinbase;
 using CryptoKeeper.Domain.Services.Interfaces;
 using Newtonsoft.Json;
 
-namespace CryptoKeeper.Domain.Services.Apis
+namespace CryptoKeeper.Domain.Services.Apis.PricingMonitors
 {
     public class CoinbasePricingMonitorService : IAmPricingMonitor
     {

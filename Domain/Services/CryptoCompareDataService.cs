@@ -76,7 +76,6 @@ namespace CryptoKeeper.Domain.Services
 
         public void GetExchangeCoins(string primaryCoin, string valueCoin, List<Exchange> exchanges, List<string> symbols = null)
         {
-            Console.Write("Getting coins for exchanges...");
             var completeExchanges = GetAllExchanges();
             foreach (var exchange in exchanges)
             {
@@ -85,22 +84,20 @@ namespace CryptoKeeper.Domain.Services
                 {
                     coins = coins.Where(m => symbols.Contains(m.Symbol)).ToList();
                 }
-                coins = coins.Where(m => m.Symbol != valueCoin).ToList();
-                coins.ForEach(m =>
-                {
-                    var coinsToRemove = m.Coins.Where(n => 
-                        m.Symbol == primaryCoin && n.Symbol != valueCoin ||
-                        m.Symbol != primaryCoin && n.Symbol == valueCoin).ToList();
-                    coinsToRemove.ForEach(n => m.Coins.Remove(n));
-                });
+                //coins = coins.Where(m => m.Symbol != valueCoin).ToList();
+                //coins.ForEach(m =>
+                //{
+                //    var coinsToRemove = m.Coins.Where(n => 
+                //        m.Symbol == primaryCoin && n.Symbol != valueCoin ||
+                //        m.Symbol != primaryCoin && n.Symbol == valueCoin).ToList();
+                //    coinsToRemove.ForEach(n => m.Coins.Remove(n));
+                //});
                 exchange.Coins = coins;
             }
-            Console.WriteLine("Done.");
         }
 
         public List<string> GetTopVolumeSymbols(string tsym)
         {
-            Console.Write($"Getting top volume coins for {tsym}...");
             var url = $"{BaseUrl}/top/volumes?tsym={tsym}";
             var symbols = new List<string> { tsym };
             dynamic symbolData = GetData<dynamic>(url);
@@ -108,7 +105,6 @@ namespace CryptoKeeper.Domain.Services
             {
                 symbols.Add(symbol.SYMBOL.Value);
             }
-            Console.WriteLine("Done.");
             return symbols;
         }
 

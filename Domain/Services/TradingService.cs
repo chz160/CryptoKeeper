@@ -44,17 +44,28 @@ namespace CryptoKeeper.Domain.Services
         {
             try
             {
+                Console.Write($"Getting top volume coins for {_primaryCoin}...");
                 _eligibleSymbols = _cryptoCompareDataService.GetTopVolumeSymbols(_primaryCoin).ToList();
+                Console.WriteLine("Done.");
                 //_exchanges = _cryptoCompareDataService.GetTopExchangesForPair(_primaryCoin, _valueCoin);
                 //_cryptoCompareDataService.GetExchangeCoins(_primaryCoin, _valueCoin, _exchanges, _eligibleSymbols);
+                //TEMP use
+                //_exchanges = _cryptoCompareDataService.GetAllExchanges();
+                //_cryptoCompareDataService.GetExchangeCoins(_primaryCoin, null, _exchanges, _eligibleSymbols);
 
+                Console.Write("Loading API config file...");
                 _exchanges = _configService.GetConfiguredExchanges();
+                Console.WriteLine("Done.");
+
+                Console.Write("Getting coins for exchanges...");
                 _exchanges.ForEach(exchange=> { _apiServiceFactory.Create(exchange).GetProducts(exchange, _eligibleSymbols); });
+                Console.WriteLine("Done.");
 
                 var exchangePairParam = new ExchangePairParam(_primaryCoin, _valueCoin, _exchangeCurrentlyHoldingFunds, _eligibleSymbols, _exchanges);
                 //var exchangePairParam = new ExchangePairParam(_primaryCoin, _valueCoin, _exchangeCurrentlyHoldingFunds, null, _exchanges);
 
                 PricingService.Instance.StartPricingDataThreads(exchangePairParam);
+
                 LocateAllTradableAssets(exchangePairParam);
                 MoveAssetsToOptimalExchange(exchangePairParam);
 

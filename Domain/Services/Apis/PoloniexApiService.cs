@@ -8,6 +8,7 @@ using CryptoKeeper.Domain.Constants;
 using CryptoKeeper.Domain.DataObjects.Dtos;
 using CryptoKeeper.Domain.DataObjects.Dtos.Poloniex;
 using CryptoKeeper.Domain.Enums;
+using CryptoKeeper.Domain.Services.Apis.PricingMonitors;
 using CryptoKeeper.Domain.Services.Interfaces;
 
 namespace CryptoKeeper.Domain.Services.Apis

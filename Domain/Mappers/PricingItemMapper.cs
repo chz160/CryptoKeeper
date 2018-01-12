@@ -10,6 +10,7 @@ namespace CryptoKeeper.Domain.Mappers
 {
     public class PricingItemMapper : 
         IUpdateMapper<HistoMinuteItem, PricingItem>,
+        IUpdateMapper<TickerDto, PricingItem>,
         IUpdateMapper<TickerChannelDto, PricingItem>,
         IUpdateMapper<MarketSummaryDto, PricingItem>
     {
@@ -29,6 +30,12 @@ namespace CryptoKeeper.Domain.Mappers
         {
             updateType.Timestamp = DateTimeOffset.Parse(sourceType.TimeStamp).ToUnixTimeSeconds();
             updateType.Price = sourceType.Bid;
+        }
+
+        public void Update(TickerDto sourceType, PricingItem updateType)
+        {
+            updateType.Timestamp = sourceType.Timestamp;
+            updateType.Price = sourceType.Price;
         }
     }
 }
