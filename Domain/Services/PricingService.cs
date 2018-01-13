@@ -83,24 +83,25 @@ namespace CryptoKeeper.Domain.Services
         public void UpdatePricingForMinute(string exchange, string fromSymbol, string toSymbol, List<PricingItem> items)
         {
             var key = $"{exchange}_{fromSymbol}_{toSymbol}";
-            if (_coinPricing.ContainsKey(key) && _coinPricing[key] != null)
+            lock (lockObject)
             {
-                lock (lockObject)
+                if (!_coinPricing.ContainsKey(key) || _coinPricing[key] == null)
                 {
-                    var existingRows = items.Where(m => _coinPricing[key].Select(n => n.Timestamp).Contains(m.Timestamp));
-                    foreach (var existingRow in existingRows)
-                    {
-                        //var pricingItem = _builderFactory.Create<HistoMinuteItem, PricingItem>(existingRow).Build();
-                        var replaceableItem = _coinPricing[key].First(m => m.Timestamp == existingRow.Timestamp);
-                        _coinPricing[key].Replace(replaceableItem, existingRow);
+                    _coinPricing[key] = new List<PricingItem>();
+                }
+                var existingRows = items.Where(m => _coinPricing[key].Select(n => n.Timestamp).Contains(m.Timestamp));
+                foreach (var existingRow in existingRows)
+                {
+                    //var pricingItem = _builderFactory.Create<HistoMinuteItem, PricingItem>(existingRow).Build();
+                    var replaceableItem = _coinPricing[key].First(m => m.Timestamp == existingRow.Timestamp);
+                    _coinPricing[key].Replace(replaceableItem, existingRow);
 
-                    }
-                    var newRows = items.Where(m => !_coinPricing[key].Select(n => n.Timestamp).Contains(m.Timestamp)).ToList();
-                    if (newRows.Any())
-                    {
-                        //var pricingItems = _builderFactory.CreateCollection<HistoMinuteItem, PricingItem>(newRows).Build();
-                        _coinPricing[key].AddRange(newRows);
-                    }
+                }
+                var newRows = items.Where(m => !_coinPricing[key].Select(n => n.Timestamp).Contains(m.Timestamp)).ToList();
+                if (newRows.Any())
+                {
+                    //var pricingItems = _builderFactory.CreateCollection<HistoMinuteItem, PricingItem>(newRows).Build();
+                    _coinPricing[key].AddRange(newRows);
                 }
             }
         }
@@ -282,6 +283,7 @@ namespace CryptoKeeper.Domain.Services
                     }
                 }
             });
+            Console.ReadLine();
         }
         
         private List<string> BuildCryptoTickerSubscriptionParameters(List<Exchange> exchanges)

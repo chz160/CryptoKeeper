@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Threading;
 using CryptoKeeper.Domain.Constants;
@@ -60,6 +61,18 @@ namespace CryptoKeeper.Domain.Services
                 Console.Write("Getting coins for exchanges...");
                 _exchanges.ForEach(exchange=> { _apiServiceFactory.Create(exchange).GetProducts(exchange, _eligibleSymbols); });
                 Console.WriteLine("Done.");
+
+                _exchanges.ForEach(exchange =>
+                {
+                    var fees = _apiServiceFactory.Create(exchange).GetWithdrawalFees();
+                    exchange.Coins.ForEach(coin =>
+                        {
+                            if (!fees.Any(m => m.Symbol == coin.Symbol))
+                            {
+                                Colorful.Console.WriteLine($"Missing withdawal fee for {coin.Symbol} on {exchange.Name}.", Color.Red);
+                            }
+                        });
+                });
 
                 var exchangePairParam = new ExchangePairParam(_primaryCoin, _valueCoin, _exchangeCurrentlyHoldingFunds, _eligibleSymbols, _exchanges);
                 //var exchangePairParam = new ExchangePairParam(_primaryCoin, _valueCoin, _exchangeCurrentlyHoldingFunds, null, _exchanges);
@@ -154,7 +167,8 @@ namespace CryptoKeeper.Domain.Services
         {
             PricingService.Instance.UpdateExchangeCoinPrices(param.Exchanges);
 
-            var possibleLowestList = param.Exchanges.OrderBy(m => m.Coins.FirstOrDefault(n => n.Symbol == param.PrimaryCoin)?.Coins.FirstOrDefault(n => param.ValueCoin.Contains(n.Symbol))?.Price ?? 99999999999).ToList();
+            //var possibleLowestList = param.Exchanges.OrderBy(m => m.Coins.FirstOrDefault(n => n.Symbol == param.PrimaryCoin)?.Coins.FirstOrDefault(n => param.ValueCoin.Contains(n.Symbol))?.Price ?? 99999999999).ToList();
+            var possibleLowestList = param.Exchanges.OrderBy(m=>m.Name).ToList();
             if (disreguardSittingExchange == false)
             {
                 var cloneParam = param.DeepClone();
@@ -165,10 +179,10 @@ namespace CryptoKeeper.Domain.Services
                     Console.WriteLine($"Transfering from {cloneParam.LowestExchange.Name} to {cloneParam.HighestExchange.Name} is the optimal route at this time but your funds are at {param.ExchangeCurrentlyHoldingFunds}. Think about restarting to funds can be routed to the optimal exchange.");
                 }
             }
-            var possibleHighestList = param.Exchanges.OrderByDescending(m => m.Coins.FirstOrDefault(n => n.Symbol == param.PrimaryCoin)?.Coins.FirstOrDefault(n => param.ValueCoin.Contains(n.Symbol))?.Price ?? -99999999999).ToList();
+            var possibleHighestList = param.Exchanges.OrderByDescending(m => m.Name).ToList();
             foreach (var possibleLowest in possibleLowestList)
             {
-                foreach (var possibleHighest in possibleHighestList)
+                foreach (var possibleHighest in possibleHighestList.Where(m => m.Name != possibleLowest.Name))
                 {
                     foreach (var highestTrackBackCoin in possibleHighest.Coins.Where(m => m.Symbol != param.PrimaryCoin))
                     {
@@ -179,32 +193,37 @@ namespace CryptoKeeper.Domain.Services
                             lowestTrackBackCoin.Coins.Any(m => m.Symbol == param.PrimaryCoin && m.Price != 0) &&
                             highestTrackBackCoin.Coins.Any(m => m.Symbol == param.PrimaryCoin && m.Price != 0))
                         {
-                            var primaryFromValue = possibleLowest.Coins.First(m => m.Symbol == param.PrimaryCoin).Coins.First(m => param.ValueCoin.Contains(m.Symbol)).Price;
-                            var primaryToValue = possibleHighest.Coins.First(m => m.Symbol == param.PrimaryCoin).Coins.First(m => param.ValueCoin.Contains(m.Symbol)).Price;
-                            var checkPrimaryPercentDiff = _mathService.PercentDiff(primaryFromValue, primaryToValue);
-
                             var trackbackFromValue = highestTrackBackCoin.Coins.First(m => m.Symbol == param.PrimaryCoin).Price;
                             var trackbackToValue = lowestTrackBackCoin.Coins.First(m => m.Symbol == param.PrimaryCoin).Price;
                             var checkTrackBackPercentDiff = _mathService.PercentDiff(trackbackFromValue, trackbackToValue);
 
+                            var primaryFromValue = possibleLowest.Coins.FirstOrDefault(m => m.Symbol == highestTrackBackCoin.Symbol)?.Coins?.FirstOrDefault(m => m.Symbol == param.PrimaryCoin)?.Price ?? decimal.MaxValue;
+                            var primaryToValue = possibleHighest.Coins.FirstOrDefault(m => m.Symbol == highestTrackBackCoin.Symbol)?.Coins?.FirstOrDefault(m => m.Symbol == param.PrimaryCoin)?.Price ?? decimal.MaxValue;
+                            var checkPrimaryPercentDiff = _mathService.PercentDiff(primaryFromValue, primaryToValue);
+
                             var checkTotalPercentDiff = checkPrimaryPercentDiff + checkTrackBackPercentDiff;
 
-                            if (checkPrimaryPercentDiff < -0.05m &&
-                                checkTrackBackPercentDiff < 0.01m &&
-                                checkTrackBackPercentDiff > -0.1m &&
-                                checkTotalPercentDiff < -0.05m &&
-                                (checkTotalPercentDiff < param.TotalPercentDiff || param.TrackbackPercentDiff == 0))
+                            if (primaryFromValue != decimal.MaxValue &&
+                                primaryToValue != decimal.MaxValue)
                             {
-                                param.LowestExchange = possibleLowest;
-                                param.HighestExchange = possibleHighest;
-                                param.PrimaryPercentDiff = checkPrimaryPercentDiff;
+                                if (//checkPrimaryPercentDiff < 0.00m &&
+                                    checkTrackBackPercentDiff < -0.05m &&
+                                    //checkTrackBackPercentDiff > -0.15m &&
+                                    //checkTotalPercentDiff < -0.05m &&
+                                    (checkTrackBackPercentDiff < param.TrackbackPercentDiff || param.TrackbackPercentDiff == 0))
+                                {
+                                    param.LowestExchange = possibleLowest;
+                                    param.HighestExchange = possibleHighest;
+                                    param.PrimaryPercentDiff = checkPrimaryPercentDiff;
 
-                                param.TrackbackToCoin = lowestTrackBackCoin;
-                                param.TrackbackFromCoin = highestTrackBackCoin;
-                                param.TrackbackPercentDiff = checkTrackBackPercentDiff;
+                                    param.TrackbackToCoin = lowestTrackBackCoin;
+                                    param.TrackbackFromCoin = highestTrackBackCoin;
+                                    param.TrackbackPercentDiff = checkTrackBackPercentDiff;
 
-                                param.TotalPercentDiff = checkTotalPercentDiff;
+                                    param.TotalPercentDiff = checkTotalPercentDiff;
+                                }
                             }
+                            
                         }
                     }
                 }
@@ -242,24 +261,26 @@ namespace CryptoKeeper.Domain.Services
             if (startingExchange?.Name == null) throw new NoOptimalExchangeException($"An optimal exchange path was not found for {tempExchangePairParam.PrimaryCoin}. Will try again in 5 minutes...");
             if (tempExchangePairParam.ExchangeCurrentlyHoldingFunds != startingExchange.Name)
             {
-                var bestDirectExchangePairParam = exchangePairParam.DeepClone();
-                FindBestDirectMove(bestDirectExchangePairParam);
-                var bestTrackBackExchangePairParam = exchangePairParam.DeepClone();
-                bestTrackBackExchangePairParam.HighestExchange = bestDirectExchangePairParam.LowestExchange;
-                bestTrackBackExchangePairParam.LowestExchange = startingExchange;
-                FindBestTrackbackMove(bestTrackBackExchangePairParam);
+                //var bestDirectExchangePairParam = exchangePairParam.DeepClone();
+                //FindBestDirectMove(bestDirectExchangePairParam);
+                //var bestTrackBackExchangePairParam = exchangePairParam.DeepClone();
+                //bestTrackBackExchangePairParam.HighestExchange = bestDirectExchangePairParam.LowestExchange;
+                //bestTrackBackExchangePairParam.LowestExchange = startingExchange;
+                //FindBestTrackbackMove(bestTrackBackExchangePairParam);
 
-                string verbage;
-                if (bestDirectExchangePairParam.TotalPercentDiff <= bestTrackBackExchangePairParam.TotalPercentDiff)
-                {
-                    verbage = $"as a direct transfer on {exchangePairParam.PrimaryCoin}";
-                }
-                else
-                {
-                    verbage = $"as a trackback with {bestTrackBackExchangePairParam.TrackbackFromCoin.Symbol}";
-                }
+                //string verbage;
+                //if (bestDirectExchangePairParam.TotalPercentDiff <= bestTrackBackExchangePairParam.TotalPercentDiff)
+                //{
+                //    verbage = $"as a direct transfer on {exchangePairParam.PrimaryCoin}";
+                //}
+                //else
+                //{
+                //    verbage = $"as a trackback with {bestTrackBackExchangePairParam.TrackbackFromCoin.Symbol}";
+                //}
 
-                Console.Write($"For optimal trading, assets are being moved from {tempExchangePairParam.ExchangeCurrentlyHoldingFunds} to {startingExchange.Name} {verbage}...");
+                //Console.Write($"For optimal trading, assets are being moved from {tempExchangePairParam.ExchangeCurrentlyHoldingFunds} to {startingExchange.Name} {verbage}...");
+
+                Console.Write($"For optimal trading, assets are being moved from {tempExchangePairParam.ExchangeCurrentlyHoldingFunds} to {startingExchange.Name}...");
 
                 exchangePairParam.ExchangeCurrentlyHoldingFunds = startingExchange.Name;
                 Console.WriteLine("Done.");

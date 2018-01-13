@@ -43,10 +43,39 @@ namespace CryptoKeeper.Domain.Services.Apis
         public virtual bool SignAsHex => false;
         public virtual Encoding Encoder => Encoding.ASCII;
         public abstract PricingApiType PricingApiType { get; }
-        public abstract decimal MakerFee { get; }
-        public abstract decimal TakerFee { get; }
+        public virtual decimal MakerFee => 0.0025m;
+        public virtual decimal TakerFee => 0.0025m;
         public virtual List<WithdrawalFee> WithdrawalFees => PricingService.Instance.GetWithdrawalFeesForExchange(this);
-        public abstract List<WithdrawalFee> GetWithdrawalFees();
+
+        public virtual List<WithdrawalFee> GetWithdrawalFees()
+        {
+            return new List<WithdrawalFee>{
+                new WithdrawalFee {Symbol = "BTC", Fee = 0.001m},
+                new WithdrawalFee {Symbol = "LTC", Fee = 0.003m},
+                new WithdrawalFee {Symbol = "ETH", Fee = 0.00958m},
+                new WithdrawalFee {Symbol = "BCH", Fee = 0.0018m},
+                new WithdrawalFee {Symbol = "BTG", Fee = 0.0005m},
+                new WithdrawalFee {Symbol = "ETC", Fee = 0.002m},
+                new WithdrawalFee {Symbol = "PPC", Fee = 0.02m},
+                new WithdrawalFee {Symbol = "DASH", Fee = 0.03m},
+                new WithdrawalFee {Symbol = "ZEC", Fee = 0.0001m},
+                new WithdrawalFee {Symbol = "XRP", Fee = 0.509m},
+                new WithdrawalFee {Symbol = "EOS", Fee = 1.5m},
+                new WithdrawalFee {Symbol = "TRX", Fee = 270m},
+                new WithdrawalFee {Symbol = "WTC", Fee = 0.75m},
+                new WithdrawalFee {Symbol = "VEN", Fee = 14m},
+                new WithdrawalFee {Symbol = "RLC", Fee = 1.21m},
+                new WithdrawalFee {Symbol = "GTO", Fee = 1.21m},
+                new WithdrawalFee {Symbol = "QTUM", Fee = 0.04m},
+                new WithdrawalFee {Symbol = "XVG", Fee = 0.002m},
+                new WithdrawalFee {Symbol = "NMC", Fee = 0.002m},
+                new WithdrawalFee {Symbol = "VIA", Fee = 0.002m},
+                new WithdrawalFee {Symbol = "DGB", Fee = 0.002m},
+                new WithdrawalFee {Symbol = "EOS", Fee = 10m},
+                new WithdrawalFee {Symbol = "BNB", Fee = 0.002m},
+                new WithdrawalFee {Symbol = "WASH", Fee = 0.01m},
+            };
+        }
 
         protected virtual string SignString(string message)
         {

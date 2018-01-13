@@ -10,6 +10,11 @@
     <None Remove="Resources\chunky.flf" />
     <None Remove="Resources\cryptkeeper.jpg" />
     <None Remove="Resources\maxresdefault.jpg" />
+    <None Remove="Services\TradingService.bak" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="Services\TradingService.bak" />
   </ItemGroup>
 
   <ItemGroup>

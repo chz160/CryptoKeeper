@@ -1,5 +1,5 @@
-1. Add NLog.
-2. Figure out how to get the Socket.IO streams from cryptocompare so we can have up to date prices and stop the per-minute poll for pricing data.
+1. Make sure funds are moved to the exchange where we can buy the most trackback coin for out primary coin at the beginning.
+2. Add NLog.
 3. Make sure exchange has enough volume of the trackback coins at market price to trade for.
 4. Seems like occasionally when attempting to find the best trackback, we're not finding an optimal route and the last one is being used somehow.
-5. Move thread collection to application level. Kill threads as application closes.
+5. Instead of using a USD value as our investment use the primary coin total found on exchanges or and entered amount when the starting exchange is passed in.

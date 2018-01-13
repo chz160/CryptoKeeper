@@ -1,9 +1,7 @@
-﻿using System.Collections.Generic;
-using System.Net;
+﻿using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using CryptoKeeper.Domain.Constants;
-using CryptoKeeper.Domain.DataObjects.Dtos;
 using CryptoKeeper.Domain.Enums;
 using CryptoKeeper.Domain.Services.Apis.PricingMonitors;
 using CryptoKeeper.Domain.Services.Interfaces;
@@ -25,12 +23,7 @@ namespace CryptoKeeper.Domain.Services.Apis
         public override PricingApiType PricingApiType => PricingApiType.CryptoCompare;
         public override decimal MakerFee => 0.0025m;
         public override decimal TakerFee => 0.0025m;
-
-        public override List<WithdrawalFee> GetWithdrawalFees()
-        {
-            throw new System.NotImplementedException();
-        }
-
+        
         protected override void BuildHeaders(HttpWebRequest request, string baseUrl, string relativeUrl, string body)
         {
             throw new System.NotImplementedException();
