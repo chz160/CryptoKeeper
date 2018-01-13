@@ -108,7 +108,6 @@ namespace CryptoKeeper.Domain.Services
             {
                 asciival = White;
             }
-
             return asciival;
         }
     }

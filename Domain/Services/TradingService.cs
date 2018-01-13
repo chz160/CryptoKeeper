@@ -214,14 +214,17 @@ namespace CryptoKeeper.Domain.Services
         public void LocateAllTradableAssets(ExchangePairParam param)
         {
             Console.Write("Locating tradable assets...");
-            var largest = 0m;
-            foreach (var exchange in param.Exchanges)
+            if (string.IsNullOrEmpty(param.ExchangeCurrentlyHoldingFunds))
             {
-                var amount = _apiServiceFactory.Create(exchange).GetBalances(param.PrimaryCoin);
-                if (amount > largest)
+                var largest = 0m;
+                foreach (var exchange in param.Exchanges)
                 {
-                    largest = amount;
-                    param.ExchangeCurrentlyHoldingFunds = exchange.Name;
+                    var amount = _apiServiceFactory.Create(exchange).GetBalances(param.PrimaryCoin);
+                    if (amount > largest)
+                    {
+                        largest = amount;
+                        param.ExchangeCurrentlyHoldingFunds = exchange.Name;
+                    }
                 }
             }
             Console.WriteLine("Done.");

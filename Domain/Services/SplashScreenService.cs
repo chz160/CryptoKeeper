@@ -39,7 +39,7 @@ namespace CryptoKeeper.Domain.Services
             Thread.Sleep(1000);
             Console.ForegroundColor = ConsoleColor.White;
             Console.BackgroundColor = ConsoleColor.Black;
-            _clearConsoleService.Clear();
+            //_clearConsoleService.Clear();
         }
     }
 }

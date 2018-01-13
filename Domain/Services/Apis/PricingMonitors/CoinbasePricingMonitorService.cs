@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Net.WebSockets;
 using System.Text;
@@ -10,6 +11,7 @@ using CryptoKeeper.Domain.Constants;
 using CryptoKeeper.Domain.DataObjects.Dtos;
 using CryptoKeeper.Domain.DataObjects.Dtos.Coinbase;
 using CryptoKeeper.Domain.Services.Interfaces;
+using CryptoKeeper.Domain.Utilities;
 using Newtonsoft.Json;
 
 namespace CryptoKeeper.Domain.Services.Apis.PricingMonitors
@@ -32,20 +34,50 @@ namespace CryptoKeeper.Domain.Services.Apis.PricingMonitors
         {
             try
             {
-                var socket = new ClientWebSocket();
-                var task = socket.ConnectAsync(new Uri("wss://ws-feed.gdax.com"), CancellationToken.None);
-                task.Wait();
-                var readThread = new Thread(() => MessageRecived(socket)) { IsBackground = true };
-                readThread.Start();
-                var json = "{\"type\":\"subscribe\",\"channels\":[{\"name\":\"ticker\", \"product_ids\": [" + BuildProductIdString() + "]}]}";
-                var bytes = Encoding.UTF8.GetBytes(json);
-                var subscriptionMessageBuffer = new ArraySegment<byte>(bytes);
-                socket.SendAsync(subscriptionMessageBuffer, WebSocketMessageType.Text, true, CancellationToken.None);
+                //var socket = new ClientWebSocket();
+                //var task = socket.ConnectAsync(new Uri("wss://ws-feed.gdax.com"), CancellationToken.None);
+                //task.Wait();
+                //var readThread = new Thread(() => MessageRecived(socket)) { IsBackground = true };
+                //readThread.Start();
+                //var json = "{\"type\":\"subscribe\",\"channels\":[{\"name\":\"ticker\", \"product_ids\": [" + BuildProductIdString() + "]}]}";
+                //var bytes = Encoding.UTF8.GetBytes(json);
+                //var subscriptionMessageBuffer = new ArraySegment<byte>(bytes);
+                //socket.SendAsync(subscriptionMessageBuffer, WebSocketMessageType.Text, true, CancellationToken.None);
+
+                var socket = WebSocketWrapper.Create("wss://ws-feed.gdax.com");
+                socket.OnConnect(OnConnect);
+                socket.OnMessage(OnMessage);
+                socket.OnDisconnect(OnDisconnect);
+                socket.Connect();
             }
             catch (Exception ex)
             {
 
             }
+        }
+
+        private void OnConnect(WebSocketWrapper wrapper)
+        {
+            var json = "{\"type\":\"subscribe\",\"channels\":[{\"name\":\"ticker\", \"product_ids\": [" + BuildProductIdString() + "]}]}";
+            wrapper.SendMessage(json);
+        }
+
+        private void OnMessage(string message, WebSocketWrapper wrapper)
+        {
+            var items = JsonConvert.DeserializeObject<TickerChannelDto>(message);
+            if (items.Type == "ticker")
+            {
+                var pricingItem = _builderFactory.Create<TickerChannelDto, PricingItem>(items).Build();
+                var fromSymbol = items.Product_Id.Split("-")[0];
+                var toSymbol = items.Product_Id.Split("-")[1];
+                PricingService.Instance.UpdatePricingForMinute(ExchangeConstants.Coinbase, fromSymbol, toSymbol, pricingItem);
+            }
+        }
+
+        private void OnDisconnect(WebSocketWrapper wrapper)
+        {
+            Colorful.Console.WriteLine("Coinbase pricing monitor disconnected from web socket. Reconnecting...", Color.Red);
+            Monitor();
         }
 
         private string BuildProductIdString()
@@ -59,25 +91,32 @@ namespace CryptoKeeper.Domain.Services.Apis.PricingMonitors
             return string.Join(",", ids.Select(m => $"\"{m}\""));
         }
 
-        private void MessageRecived(ClientWebSocket socket)
-        {
-            var recBytes = new byte[1024];
-            while (socket.State == WebSocketState.Open)
-            {
-                var t = new ArraySegment<byte>(recBytes);
-                var receiveAsync = socket.ReceiveAsync(t, CancellationToken.None);
-                receiveAsync.Wait();
-                var jsonString = Encoding.UTF8.GetString(recBytes);
-                var items = JsonConvert.DeserializeObject<TickerChannelDto>(jsonString);
-                if (items.Type == "ticker")
-                {
-                    var pricingItem = _builderFactory.Create<TickerChannelDto, PricingItem>(items).Build();
-                    var fromSymbol = items.Product_Id.Split("-")[0];
-                    var toSymbol = items.Product_Id.Split("-")[1];
-                    PricingService.Instance.UpdatePricingForMinute(ExchangeConstants.Coinbase, fromSymbol, toSymbol, pricingItem);
-                }
-                recBytes = new byte[1024];
-            }
-        }
+        //private void MessageRecived(ClientWebSocket socket)
+        //{
+        //    var recBytes = new byte[1024];
+        //    while (socket.State == WebSocketState.Open)
+        //    { 
+        //        try
+        //        {
+        //            var t = new ArraySegment<byte>(recBytes);
+        //            var receiveAsync = socket.ReceiveAsync(t, CancellationToken.None);
+        //            receiveAsync.Wait();
+        //            var jsonString = Encoding.UTF8.GetString(recBytes);
+        //            var items = JsonConvert.DeserializeObject<TickerChannelDto>(jsonString);
+        //            if (items.Type == "ticker")
+        //            {
+        //                var pricingItem = _builderFactory.Create<TickerChannelDto, PricingItem>(items).Build();
+        //                var fromSymbol = items.Product_Id.Split("-")[0];
+        //                var toSymbol = items.Product_Id.Split("-")[1];
+        //                PricingService.Instance.UpdatePricingForMinute(ExchangeConstants.Coinbase, fromSymbol, toSymbol, pricingItem);
+        //            }
+        //            recBytes = new byte[1024];
+        //        }
+        //        catch (Exception e)
+        //        {
+        //            Colorful.Console.WriteLine(e, Color.Red);
+        //        }
+        //    }
+        //}
     }
 }
