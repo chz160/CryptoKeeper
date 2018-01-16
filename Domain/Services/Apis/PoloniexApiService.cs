@@ -69,17 +69,36 @@ namespace CryptoKeeper.Domain.Services.Apis
         public override void GetProducts(Exchange exchange, List<string> eligibleSymbols)
         {
             var response = Get<Dictionary<string, CurrencyDto>>(PublicUrl, "?command=returnCurrencies");
-            var products = response.Where(m => eligibleSymbols.Contains(m.Key));
+            var products = response.Where(m => eligibleSymbols.Contains(m.Key) && m.Value.Delisted == false && m.Value.Frozen == false && m.Value.Disabled == false);
+            var orderBook = GetOrderBook();
             foreach (var product in products)
             {
                 var coin = exchange.Coins.FirstOrDefault(m => m.Symbol == product.Key);
                 if (coin == null)
                 {
                     coin = new Coin { Symbol = product.Key };
+                    foreach (var order in orderBook.Where(m=>m.FromSymbol == product.Key && m.IsFrozenBool == false))
+                    {
+                        coin.Coins.Add(new Coin{Symbol = order.ToSymbol});
+                    }
                     exchange.Coins.Add(coin);
                 }
-                coin.Coins.Add(new Coin { Symbol = product.Key == SymbolConstants.Btc ? SymbolConstants.Usd : SymbolConstants.Btc });
+                //coin.Coins.Add(new Coin { Symbol = product.Key == SymbolConstants.Btc ? SymbolConstants.Usd : SymbolConstants.Btc });
             }
+        }
+
+        private List<OrderBookDto> GetOrderBook()
+        {
+            var result = new List<OrderBookDto>();
+            var response = Get<Dictionary<string, OrderBookDto>>(PublicUrl, "?command=returnOrderBook&currencyPair=All&depth=10");
+            foreach (var entry in response)
+            {
+                var market = entry.Key.Split("_");
+                entry.Value.FromSymbol = market[0];
+                entry.Value.ToSymbol = market[1];
+                result.Add(entry.Value);
+            }
+            return result;
         }
     }
 }

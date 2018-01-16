@@ -7,10 +7,10 @@ namespace CryptoKeeper.Domain.DataObjects.Params
     public class ExchangePairParam : ExchangeParam, IStoreDirectTransferData, IStoreTrackbackTransferData
     {
         //for serialization only 
-        public ExchangePairParam() : base(null, null, null, null, null)
+        public ExchangePairParam() : base(null, null, null, null)
         { }
-        public ExchangePairParam(string primaryCoin, string[] valueCoin, string exchangeCurrentlyHoldingFunds, List<string> eligibleSymbols, List<Exchange> exchanges) 
-            : base(primaryCoin, valueCoin, exchangeCurrentlyHoldingFunds, eligibleSymbols, exchanges)
+        public ExchangePairParam(string primaryCoin, string exchangeCurrentlyHoldingFunds, List<string> eligibleSymbols, List<Exchange> exchanges) 
+            : base(primaryCoin, exchangeCurrentlyHoldingFunds, eligibleSymbols, exchanges)
         { }
 
         public Exchange LowestExchange { get; set; }

@@ -65,8 +65,9 @@ namespace CryptoKeeper.Domain.Services.Apis
 
         public override void GetProducts(Exchange exchange, List<string> eligibleSymbols)
         {
-            var response = Get<ResponseDto<List<MarketSummaryDto>>>(PublicUrl, "/public/getmarketsummaries");
-            var products = response.Result.Where(m=>eligibleSymbols.Contains(m.MarketCurrency)).OrderByDescending(m => m.BaseVolume).ThenByDescending(m => m.Volume).ToList();
+            var markets = Get<ResponseDto<List<MarketSummaryDto>>>(PublicUrl, "/public/getmarketsummaries").Result;
+            var activeCurrencies = Get<ResponseDto<List<CurrencyDto>>>(PrivateUrl, "/public/getcurrencies").Result.Where(m=>m.IsActive).Select(m=>m.Currency);
+            var products = markets.Where(m=>eligibleSymbols.Contains(m.MarketCurrency) && activeCurrencies.Contains(m.MarketCurrency)).OrderByDescending(m => m.BaseVolume).ThenByDescending(m => m.Volume).ToList();
             foreach (var product in products)
             {
                 var coin = exchange.Coins.FirstOrDefault(m => m.Symbol == product.MarketCurrency);

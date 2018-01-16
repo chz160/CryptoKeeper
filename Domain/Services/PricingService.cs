@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using CryptoKeeper.Domain.Builders.Factories;
 using CryptoKeeper.Domain.Builders.Interfaces;
+using CryptoKeeper.Domain.Constants;
 using CryptoKeeper.Domain.DataObjects.Dtos;
 using CryptoKeeper.Domain.DataObjects.Dtos.CryptoCompare;
 using CryptoKeeper.Domain.DataObjects.Params;
@@ -146,14 +147,12 @@ namespace CryptoKeeper.Domain.Services
             foreach (var exchange in exchangePairParam.Exchanges)
             {
                 counter++;
-                foreach (var coin in exchange.Coins.Where(m=> !exchangePairParam.ValueCoin.Contains(m.Symbol)))
+                foreach (var coin in exchange.Coins.Where(m => !SymbolConstants.FiatCurrency.Contains(m.Symbol) ))
                 {
-                    foreach (var childCoin in coin.Coins.Where(m=> 
-                        (coin.Symbol == exchangePairParam.PrimaryCoin && exchangePairParam.ValueCoin.Contains(m.Symbol)) ||
-                        (coin.Symbol != exchangePairParam.PrimaryCoin && m.Symbol == exchangePairParam.PrimaryCoin)))
+                    foreach (var childCoin in coin.Coins.Where(m => !SymbolConstants.FiatCurrency.Contains(m.Symbol)))
                     {
                         //Console.WriteLine($"{exchange.Name}_{coin.Symbol}_{childCoin.Symbol}");
-                        GetPriceHistory(exchange.Name, coin.Symbol, childCoin.Symbol, ((DateTimeOffset)DateTime.UtcNow).ToUnixTimeSeconds());
+                        //GetPriceHistory(exchange.Name, coin.Symbol, childCoin.Symbol, ((DateTimeOffset)DateTime.UtcNow).ToUnixTimeSeconds());
                     }
                 }
 
@@ -175,6 +174,7 @@ namespace CryptoKeeper.Domain.Services
             cryptoThread.Start();
 
             Console.WriteLine("Done.");
+            Thread.Sleep(new TimeSpan(0,0,1,0));
         }
 
         //private void DownloadPricingEveryMinute(Exchange exchange)
@@ -212,8 +212,12 @@ namespace CryptoKeeper.Domain.Services
                         var key = $"{exchange.Name}_{coin.Symbol}_{childCoin.Symbol}";
                         if (_coinPricing.ContainsKey(key) && _coinPricing[key].Any())
                         {
-                            var pricingItem = _coinPricing[key].ToList().OrderByDescending(m => m.Timestamp).First();
-                            childCoin.Price = pricingItem.Price;
+                            var items = _coinPricing[key].OrderByDescending(m => m.Timestamp).ToList();
+                            var now = items.First().Timestamp;
+                            var backTo = DateTimeOffset.FromUnixTimeSeconds(now).AddMinutes(-5).ToUnixTimeSeconds();
+                            var pricingItems = items.Where(m=>m.Timestamp <= now && m.Timestamp >= backTo).ToList();
+                            var fiveMinutePrice = pricingItems.Sum(m => m.Price) / pricingItems.Count;
+                            childCoin.Price = fiveMinutePrice;
                         }
                     }
                 }
@@ -255,8 +259,7 @@ namespace CryptoKeeper.Domain.Services
             var api = new ExchangeApiServiceFactory().Create(exchange);
             return api.TakerFee;
         }
-
-
+        
         public void ListenToCryptoCompareTicker(List<Exchange> exchanges)
         {
             var subParams = BuildCryptoTickerSubscriptionParameters(exchanges);
@@ -279,7 +282,7 @@ namespace CryptoKeeper.Domain.Services
                         var currentTicker = _builderFactory.Create<string[], TickerDto>(dataArray).Build();
                         //Console.WriteLine(JsonConvert.SerializeObject(currentTicker));
                         var pricingItem = _builderFactory.Create<TickerDto, PricingItem>(currentTicker).Build();
-                        UpdatePricingForMinute(currentTicker.Market, currentTicker.FromSymbol, currentTicker.ToSymbol, pricingItem);
+                        PricingService.Instance.UpdatePricingForMinute(currentTicker.Market, currentTicker.FromSymbol, currentTicker.ToSymbol, pricingItem);
                     }
                 }
             });

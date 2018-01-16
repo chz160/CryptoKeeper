@@ -28,16 +28,16 @@ namespace CryptoKeeper.Domain.Services
         public List<Exchange> GetAllExchanges()
         {
             var exchanges = new List<Exchange>();
-            dynamic exchangeData = GetData<dynamic>($"{BaseUrl}/all/exchanges");
-            foreach (dynamic exchange in exchangeData)
+            var exchangeData = GetData<Dictionary<string, Dictionary<string, List<string>>>>($"{BaseUrl}/all/exchanges");
+            foreach (var exchange in exchangeData)
             {
-                var exchangeDto = new Exchange { Name = exchange.Name };
-                foreach (dynamic coin in exchange.Value)
+                var exchangeDto = new Exchange { Name = exchange.Key };
+                foreach (var coin in exchange.Value)
                 {
-                    var coinDto = new Coin { Symbol = coin.Name };
-                    foreach (dynamic convertionCoin in coin.Value)
+                    var coinDto = new Coin { Symbol = coin.Key };
+                    foreach (var convertionCoin in coin.Value)
                     {
-                        string symbol = convertionCoin.Value.ToString();
+                        var symbol = convertionCoin;
                         coinDto.Coins.Add(new Coin { Symbol = symbol });
                     }
                     if (coinDto.Coins.Any())
@@ -84,21 +84,19 @@ namespace CryptoKeeper.Domain.Services
                 {
                     coins = coins.Where(m => symbols.Contains(m.Symbol)).ToList();
                 }
-                //coins = coins.Where(m => m.Symbol != valueCoin).ToList();
-                //coins.ForEach(m =>
-                //{
-                //    var coinsToRemove = m.Coins.Where(n => 
-                //        m.Symbol == primaryCoin && n.Symbol != valueCoin ||
-                //        m.Symbol != primaryCoin && n.Symbol == valueCoin).ToList();
-                //    coinsToRemove.ForEach(n => m.Coins.Remove(n));
-                //});
-                exchange.Coins = coins;
+                coins = coins.Where(m => !SymbolConstants.FiatCurrency.Contains(m.Symbol)).ToList();
+                coins.ForEach(m =>
+                {
+                    var coinsToRemove = m.Coins.Where(n => SymbolConstants.FiatCurrency.Contains(n.Symbol)).ToList();
+                    coinsToRemove.ForEach(n => m.Coins.Remove(n));
+                });
+                exchange.Coins = coins.Where(m=>m.Coins.Any()).ToList();
             }
         }
 
         public List<string> GetTopVolumeSymbols(string tsym)
         {
-            var url = $"{BaseUrl}/top/volumes?tsym={tsym}";
+            var url = $"{BaseUrl}/top/volumes?tsym={tsym}&limit=25";
             var symbols = new List<string> { tsym };
             dynamic symbolData = GetData<dynamic>(url);
             foreach (dynamic symbol in symbolData["Data"])

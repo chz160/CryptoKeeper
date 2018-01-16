@@ -1,5 +1,7 @@
 1. Make sure funds are moved to the exchange where we can buy the most trackback coin for out primary coin at the beginning.
-2. Add NLog.
-3. Make sure exchange has enough volume of the trackback coins at market price to trade for.
-4. Seems like occasionally when attempting to find the best trackback, we're not finding an optimal route and the last one is being used somehow.
-5. Instead of using a USD value as our investment use the primary coin total found on exchanges or and entered amount when the starting exchange is passed in.
+2. Make sure pricing threads are actually updating the the pricing dictionary.
+3. Add NLog.
+4. Make sure exchange has enough volume of the trackback coins at market price to trade for.
+5. Seems like occasionally when attempting to find the best trackback, we're not finding an optimal route and the last one is being used somehow.
+6. Create a service to convert coins to USD value for display. Maybe some background thread and monitors BTC -> USD for exchanges that service that market. Then when we want to see our $ value, simulate, if needed, a buy from our primary coin to BTC, then, if needed, transfer an exchagen witha BTC-USD market. Then report value  sans all the fees.
+7. Figure out what to do with kraken using XBT instead of BTC

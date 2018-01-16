@@ -7,12 +7,11 @@ namespace CryptoKeeper.TrackBack
     {
         static void Main(string[] args)
         {
-            var exchangeCurrentlyHoldingFunds = "Coinbase";
+            var exchangeCurrentlyHoldingFunds = ExchangeConstants.Tidex;
             var primaryCoin = SymbolConstants.Btc;
-            var valueCoin = new []{ SymbolConstants.Usd, SymbolConstants.Usdt };
-            var initalInvestment = 1000m;
+            var initalInvestment = 0.06463713m;
             new SplashScreenService().ShowSplashScreen();
-            new TradingService(exchangeCurrentlyHoldingFunds, primaryCoin, valueCoin, initalInvestment).Trade();
+            new TradingService(exchangeCurrentlyHoldingFunds, primaryCoin, initalInvestment).Trade();
         }
     }
 }

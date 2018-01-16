@@ -21,7 +21,9 @@ namespace CryptoKeeper.Domain.Services.Apis
 
         public override Encoding Encoder => Encoding.UTF8;
         public override PricingApiType PricingApiType => PricingApiType.CryptoCompare;
-        
+        public override decimal MakerFee => 0.001m;
+        public override decimal TakerFee => 0.001m;
+
         protected override void BuildHeaders(HttpWebRequest request, string baseUrl, string relativeUrl, string body)
         {
             throw new System.NotImplementedException();

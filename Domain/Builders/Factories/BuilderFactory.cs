@@ -20,9 +20,18 @@ namespace CryptoKeeper.Domain.Builders.Factories
                 typeof(FROMTYPE) == typeof(string[]) && typeof(TOTYPE) == typeof(TickerDto) ||
                 typeof(FROMTYPE) == typeof(TickerDto) && typeof(TOTYPE) == typeof(PricingItem) ||
                 typeof(FROMTYPE) == typeof(TickerChannelDto) && typeof(TOTYPE) == typeof(PricingItem) ||
+                typeof(FROMTYPE) == typeof(DataObjects.Dtos.HitBtc.TickerDto) && typeof(TOTYPE) == typeof(PricingItem) ||
+                typeof(FROMTYPE) == typeof(DataObjects.Dtos.WavesDex.TickerDto) && typeof(TOTYPE) == typeof(PricingItem) ||
+                typeof(FROMTYPE) == typeof(DataObjects.Dtos.Abucoins.TickerDto) && typeof(TOTYPE) == typeof(PricingItem) ||
+                typeof(FROMTYPE) == typeof(DataObjects.Dtos.Binance.TickerDto) && typeof(TOTYPE) == typeof(PricingItem) ||
+                typeof(FROMTYPE) == typeof(DataObjects.Dtos.BitBay.TickerDto) && typeof(TOTYPE) == typeof(PricingItem) ||
+                typeof(FROMTYPE) == typeof(DataObjects.Dtos.BitMarket.TickerDto) && typeof(TOTYPE) == typeof(PricingItem) ||
+                typeof(FROMTYPE) == typeof(DataObjects.Dtos.Bitstamp.TickerDto) && typeof(TOTYPE) == typeof(PricingItem) ||
+                typeof(FROMTYPE) == typeof(DataObjects.Dtos.Bleutrade.TickerDto) && typeof(TOTYPE) == typeof(PricingItem) ||
                 typeof(FROMTYPE) == typeof(DataObjects.Dtos.BitTrex.MarketSummaryDto) && typeof(TOTYPE) == typeof(PricingItem) ||
                 typeof(FROMTYPE) == typeof(DataObjects.Dtos.BitTrex.CurrencyDto) && typeof(TOTYPE) == typeof(WithdrawalFee) ||
                 typeof(FROMTYPE) == typeof(KeyValuePair<string, DataObjects.Dtos.Poloniex.CurrencyDto>) && typeof(TOTYPE) == typeof(WithdrawalFee) ||
+                typeof(FROMTYPE) == typeof(DataObjects.Dtos.Bleutrade.CurrencyDto) && typeof(TOTYPE) == typeof(WithdrawalFee) ||
                 typeof(FROMTYPE) == typeof(ApiConfigurationData) && typeof(TOTYPE) == typeof(Exchange))
             {
                 return new CreationBuilder<FROMTYPE, TOTYPE>(fromtype) as IBuilder<TOTYPE>;

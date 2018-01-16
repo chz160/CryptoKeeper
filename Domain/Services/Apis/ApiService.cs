@@ -74,6 +74,13 @@ namespace CryptoKeeper.Domain.Services.Apis
                 new WithdrawalFee {Symbol = "EOS", Fee = 10m},
                 new WithdrawalFee {Symbol = "BNB", Fee = 0.002m},
                 new WithdrawalFee {Symbol = "WASH", Fee = 0.01m},
+                new WithdrawalFee {Symbol = "SC", Fee = 0.1m},
+                new WithdrawalFee {Symbol = "XMR", Fee = 0.04m},
+                new WithdrawalFee {Symbol = "ADA", Fee = 0.2m},
+                new WithdrawalFee {Symbol = "XLM", Fee = 0.2m},
+                new WithdrawalFee {Symbol = "VIBE", Fee = 145m},
+                new WithdrawalFee {Symbol = "DOGE", Fee = 2m},
+                new WithdrawalFee {Symbol = "STRAT", Fee = 2m}
             };
         }
 

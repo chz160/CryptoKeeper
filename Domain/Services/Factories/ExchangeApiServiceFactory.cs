@@ -12,15 +12,15 @@ namespace CryptoKeeper.Domain.Services.Factories
         {
             if (exchange.Name == ExchangeConstants.Abucoins)
             {
-                return new AbucoinsApiService();
+                return new AbucoinsApiService(exchange);
             }
             if (exchange.Name == ExchangeConstants.Binance)
             {
-                return new BinanceApiService();
+                return new BinanceApiService(exchange);
             }
             if (exchange.Name == ExchangeConstants.BitBay)
             {
-                return new BitBayApiService();
+                return new BitBayApiService(exchange);
             }
             if (exchange.Name == ExchangeConstants.Bitfinex)
             {
@@ -28,11 +28,11 @@ namespace CryptoKeeper.Domain.Services.Factories
             }
             if (exchange.Name == ExchangeConstants.BitMarket)
             {
-                return new BitMarketApiService();
+                return new BitMarketApiService(exchange);
             }
             if (exchange.Name == ExchangeConstants.Bitstamp)
             {
-                return new BitstampApiService();
+                return new BitstampApiService(exchange);
             }
             if (exchange.Name == ExchangeConstants.BitTrex)
             {
@@ -40,7 +40,7 @@ namespace CryptoKeeper.Domain.Services.Factories
             }
             if (exchange.Name == ExchangeConstants.Bleutrade)
             {
-                return new BleutradeApiService();
+                return new BleutradeApiService(exchange);
             }
             if (exchange.Name == ExchangeConstants.BtcMarkets)
             {
@@ -96,7 +96,7 @@ namespace CryptoKeeper.Domain.Services.Factories
             }
             if (exchange.Name == ExchangeConstants.HitBtc)
             {
-                return new HitBtcApiService();
+                return new HitBtcApiService(exchange);
             }
             if (exchange.Name == ExchangeConstants.HuobiPro)
             {
@@ -164,7 +164,7 @@ namespace CryptoKeeper.Domain.Services.Factories
             }
             if (exchange.Name == ExchangeConstants.WavesDex)
             {
-                return new WavesDexApiService();
+                return new WavesDexApiService(exchange);
             }
             if (exchange.Name == ExchangeConstants.Yobit)
             {

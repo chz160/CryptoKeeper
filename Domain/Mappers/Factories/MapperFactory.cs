@@ -25,12 +25,21 @@ namespace CryptoKeeper.Domain.Mappers.Factories
             if (typeof(SOURCETYPE) == typeof(DataObjects.Dtos.CryptoCompare.HistoMinuteItem) && typeof(TOTYPE) == typeof(PricingItem) ||
                 typeof(SOURCETYPE) == typeof(DataObjects.Dtos.Coinbase.TickerChannelDto) && typeof(TOTYPE) == typeof(PricingItem) ||
                 typeof(SOURCETYPE) == typeof(DataObjects.Dtos.CryptoCompare.TickerDto) && typeof(TOTYPE) == typeof(PricingItem) ||
+                typeof(SOURCETYPE) == typeof(DataObjects.Dtos.HitBtc.TickerDto) && typeof(TOTYPE) == typeof(PricingItem) ||
+                typeof(SOURCETYPE) == typeof(DataObjects.Dtos.WavesDex.TickerDto) && typeof(TOTYPE) == typeof(PricingItem) ||
+                typeof(SOURCETYPE) == typeof(DataObjects.Dtos.Abucoins.TickerDto) && typeof(TOTYPE) == typeof(PricingItem) ||
+                typeof(SOURCETYPE) == typeof(DataObjects.Dtos.Binance.TickerDto) && typeof(TOTYPE) == typeof(PricingItem) ||
+                typeof(SOURCETYPE) == typeof(DataObjects.Dtos.BitBay.TickerDto) && typeof(TOTYPE) == typeof(PricingItem) ||
+                typeof(SOURCETYPE) == typeof(DataObjects.Dtos.BitMarket.TickerDto) && typeof(TOTYPE) == typeof(PricingItem) ||
+                typeof(SOURCETYPE) == typeof(DataObjects.Dtos.Bitstamp.TickerDto) && typeof(TOTYPE) == typeof(PricingItem) ||
+                typeof(SOURCETYPE) == typeof(DataObjects.Dtos.Bleutrade.TickerDto) && typeof(TOTYPE) == typeof(PricingItem) ||
                 typeof(SOURCETYPE) == typeof(DataObjects.Dtos.BitTrex.MarketSummaryDto) && typeof(TOTYPE) == typeof(PricingItem))
             {
                 return new PricingItemMapper() as IUpdateMapper<SOURCETYPE, TOTYPE>;
             }
             if (typeof(SOURCETYPE) == typeof(DataObjects.Dtos.BitTrex.CurrencyDto) && typeof(TOTYPE) == typeof(WithdrawalFee) ||
-                typeof(SOURCETYPE) == typeof(KeyValuePair<string, DataObjects.Dtos.Poloniex.CurrencyDto>) && typeof(TOTYPE) == typeof(WithdrawalFee))
+                typeof(SOURCETYPE) == typeof(KeyValuePair<string, DataObjects.Dtos.Poloniex.CurrencyDto>) && typeof(TOTYPE) == typeof(WithdrawalFee) ||
+                typeof(SOURCETYPE) == typeof(DataObjects.Dtos.Bleutrade.CurrencyDto) && typeof(TOTYPE) == typeof(WithdrawalFee))
             {
                 return new WithdrawalFeeMapper() as IUpdateMapper<SOURCETYPE, TOTYPE>;
             }

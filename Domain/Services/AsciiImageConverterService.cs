@@ -10,15 +10,15 @@ namespace CryptoKeeper.Domain.Services
     public class AsciiImageConverterService : IAsciiImageConverterService
     {
         private readonly INearestColorService _nearestColorService;
-        private const string Black = "@";
-        private const string Charcoal = "#";
-        private const string Darkgray = "8";
-        private const string Mediumgray = "&";
+        private const string Black = " ";
+        private const string Charcoal = ".";
+        private const string Darkgray = "*";
+        private const string Mediumgray = ":";
         private const string Medium = "o";
-        private const string Gray = ":";
-        private const string Slategray = "*";
-        private const string Lightgray = ".";
-        private const string White = " ";
+        private const string Gray = "&";
+        private const string Slategray = "8";
+        private const string Lightgray = "#";
+        private const string White = "@";
 
         public AsciiImageConverterService() : this(new NearestColorService())
         { }
@@ -74,19 +74,19 @@ namespace CryptoKeeper.Domain.Services
             var asciival = " ";
             if (redValue >= 230)
             {
-                asciival = Black;
+                asciival = White;
             }
             else if (redValue >= 200)
             {
-                asciival = Charcoal;
+                asciival = Lightgray;
             }
             else if (redValue >= 180)
             {
-                asciival = Darkgray;
+                asciival = Slategray;
             }
             else if (redValue >= 160)
             {
-                asciival = Mediumgray;
+                asciival = Gray;
             }
             else if (redValue >= 130)
             {
@@ -94,19 +94,19 @@ namespace CryptoKeeper.Domain.Services
             }
             else if (redValue >= 100)
             {
-                asciival = Gray;
+                asciival = Mediumgray;
             }
             else if (redValue >= 70)
             {
-                asciival = Slategray;
+                asciival = Darkgray;
             }
             else if (redValue >= 50)
             {
-                asciival = Lightgray;
+                asciival = Charcoal;
             }
             else
             {
-                asciival = White;
+                asciival = Black;
             }
             return asciival;
         }

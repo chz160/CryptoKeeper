@@ -28,6 +28,7 @@ namespace CryptoKeeper.Domain.Services.Apis.PricingMonitors
         {
             while (true)
             {
+                //Should probably also use the getticker endpoint as the data is not cached as long and more up-to-date.
                 var response = _apiService.Get<ResponseDto<List<MarketSummaryDto>>>(_apiService.PublicUrl, "/public/getmarketsummaries");
                 var products = response.Result.OrderByDescending(m => m.BaseVolume).ThenByDescending(m => m.Volume).ToList();
                 foreach (var product in products)
