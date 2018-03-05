@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -102,7 +103,8 @@ namespace CryptoKeeper.Domain.Services.Apis
             return string.Empty;
         }
 
-        protected abstract void BuildHeaders(HttpWebRequest request, string baseUrl, string relativeUrl, string body);
+        protected virtual void BuildHeaders(HttpWebRequest request, string baseUrl, string relativeUrl, string body)
+        { }
 
         public T Get<T>(string baseUrl, string relativeUrl, Dictionary<string, object> dictionary)
         {
@@ -113,21 +115,36 @@ namespace CryptoKeeper.Domain.Services.Apis
             return Get<T>(baseUrl, relativeUrl, dictionary.ToHttpPostString());
         }
 
+        int _getRetryCount = 0;
         public T Get<T>(string baseUrl, string relativeUrl, string body = null)
         {
-            T result;
-            if (PlaceParametersInUrl)
+            try
             {
-                relativeUrl = $"{relativeUrl}?{body}";
+                T result;
+                if (PlaceParametersInUrl)
+                {
+                    relativeUrl = $"{relativeUrl}?{body}";
+                }
+                var request = CreateHttpWebRequest("GET", baseUrl, relativeUrl);
+                BuildHeaders(request, baseUrl, relativeUrl, body);
+                using (var reader = new StreamReader(request.GetResponse().GetResponseStream()))
+                {
+                    var responseText = reader.ReadToEnd();
+                    result = JsonConvert.DeserializeObject<T>(responseText);
+                }
+                _getRetryCount = 0;
+                return result;
             }
-            var request = CreateHttpWebRequest("GET", baseUrl, relativeUrl);
-            BuildHeaders(request, baseUrl, relativeUrl, body);
-            using (var reader = new StreamReader(request.GetResponse().GetResponseStream()))
+            catch (Exception e)
             {
-                var responseText = reader.ReadToEnd();
-                result = JsonConvert.DeserializeObject<T>(responseText);
+                if (_getRetryCount < 3)
+                {
+                    _getRetryCount++;
+                    return Get<T>(baseUrl, relativeUrl, body);
+                }
+                Colorful.Console.WriteLine(e, Color.Red);
+                throw;
             }
-            return result;
         }
 
         public T Post<T>(string baseUrl, string relativeUrl, Dictionary<string, object> dictionary)

@@ -10,5 +10,7 @@
         public decimal vwap { get; set; }
         public decimal average { get; set; }
         public decimal volume { get; set; }
+        public int code { get; set; }
+        public string message { get; set; }
     }
 }

@@ -1,5 +1,4 @@
-﻿using System.Threading;
-using CryptoKeeper.Domain.Builders.Factories;
+﻿using CryptoKeeper.Domain.Builders.Factories;
 using CryptoKeeper.Domain.Builders.Interfaces;
 using CryptoKeeper.Domain.Constants;
 using CryptoKeeper.Domain.DataObjects.Dtos;
@@ -26,18 +25,17 @@ namespace CryptoKeeper.Domain.Services.Apis.PricingMonitors
 
         public void Monitor()
         {
-            while (true)
+            foreach (var coin in _exchange.Coins)
             {
-                foreach (var coin in _exchange.Coins)
+                foreach (var childCoin in coin.Coins)
                 {
-                    foreach (var childCoin in coin.Coins)
+                    var ticker = _apiService.Get<TickerDto>(_apiService.PublicUrl, $"/{coin.Symbol}{childCoin.Symbol}/ticker.json");
+                    if (ticker.code == 0)
                     {
-                        var ticker = _apiService.Get<TickerDto>(_apiService.PublicUrl, $"/{coin.Symbol}{childCoin.Symbol}/ticker.json");
                         var pricingItem = _builderFactory.Create<TickerDto, PricingItem>(ticker).Build();
                         PricingService.Instance.UpdatePricingForMinute(ExchangeConstants.BitBay, coin.Symbol, childCoin.Symbol, pricingItem);
                     }
                 }
-                Thread.Sleep(60000);
             }
         }
     }

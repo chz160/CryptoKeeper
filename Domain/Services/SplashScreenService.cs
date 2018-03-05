@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Threading;
+using System.Threading.Tasks;
 using Colorful;
 using CryptoKeeper.Domain.Services.Interfaces;
 using Console = System.Console;
@@ -36,7 +37,7 @@ namespace CryptoKeeper.Domain.Services
             Colorful.Console.WriteLine(figlet.ToAscii("CryptoKeeper"), Color.Orange);
             Colorful.Console.WriteLine(figlet.ToAscii("CryptoKeeper"), Color.OrangeRed);
             Colorful.Console.WriteLine(figlet.ToAscii("CryptoKeeper"), Color.Red);
-            Thread.Sleep(1000);
+            Task.Delay(1000).Wait();
             Console.ForegroundColor = ConsoleColor.White;
             Console.BackgroundColor = ConsoleColor.Black;
             //_clearConsoleService.Clear();

@@ -26,8 +26,8 @@ namespace CryptoKeeper.Domain.Services.Apis.PricingMonitors
 
         public void Monitor()
         {
-            while (true)
-            {
+            //while (true)
+            //{
                 //Should probably also use the getticker endpoint as the data is not cached as long and more up-to-date.
                 var response = _apiService.Get<ResponseDto<List<MarketSummaryDto>>>(_apiService.PublicUrl, "/public/getmarketsummaries");
                 var products = response.Result.OrderByDescending(m => m.BaseVolume).ThenByDescending(m => m.Volume).ToList();
@@ -36,8 +36,8 @@ namespace CryptoKeeper.Domain.Services.Apis.PricingMonitors
                     var pricingItem = _builderFactory.Create<MarketSummaryDto, PricingItem>(product).Build();
                     PricingService.Instance.UpdatePricingForMinute(ExchangeConstants.BitTrex, product.MarketCurrency, product.BaseCurrency, pricingItem);
                 }
-                Thread.Sleep(60000);
-            }
+            //    Thread.Sleep(60000);
+            //}
         }
     }
 }

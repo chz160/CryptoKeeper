@@ -1,5 +1,4 @@
-﻿using System.Net;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
 using CryptoKeeper.Domain.Constants;
 using CryptoKeeper.Domain.Enums;
@@ -21,11 +20,6 @@ namespace CryptoKeeper.Domain.Services.Apis
 
         public override Encoding Encoder => Encoding.UTF8;
         public override PricingApiType PricingApiType => PricingApiType.CryptoCompare;
-
-        protected override void BuildHeaders(HttpWebRequest request, string baseUrl, string relativeUrl, string body)
-        {
-            throw new System.NotImplementedException();
-        }
 
         public override IAmPricingMonitor MonitorPrices()
         {

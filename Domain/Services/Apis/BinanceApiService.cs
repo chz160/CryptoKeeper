@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using CryptoKeeper.Domain.Constants;
@@ -31,10 +30,7 @@ namespace CryptoKeeper.Domain.Services.Apis
         }
 
         public override Encoding Encoder => Encoding.UTF8;
-        public override PricingApiType PricingApiType => PricingApiType.Rest;
-        
-        protected override void BuildHeaders(HttpWebRequest request, string baseUrl, string relativeUrl, string body)
-        { }
+        public override PricingApiType PricingApiType => PricingApiType.WebSocket;
 
         public override IAmPricingMonitor MonitorPrices()
         {

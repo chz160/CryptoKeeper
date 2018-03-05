@@ -8,24 +8,23 @@
         public string ToSymbol { get; set; }
         public string Flags { get; set; }
         public decimal Price { get; set; }
-        public string Bid { get; set; }
-        public string Offer { get; set; }
-        public decimal LastUpdate { get; set; }
-        public string Avg { get; set; }
+        public decimal Bid { get; set; }
+        public decimal Offer { get; set; }
+        public long LastUpdate { get; set; }
+        public decimal Avg { get; set; }
         public decimal LastVolume { get; set; }
         public decimal LastVolumeTo { get; set; }
         public decimal LastTradeId { get; set; }
-        public string VolumeHour { get; set; }
-        public string VolumeHourTo { get; set; }
+        public decimal VolumeHour { get; set; }
+        public decimal VolumeHourTo { get; set; }
         public decimal Volume24Hour { get; set; }
         public decimal Volume24HourTo { get; set; }
-        public string OpenHour { get; set; }
-        public string HighHour { get; set; }
-        public string LowHour { get; set; }
-        public string Open24Hour { get; set; }
-        public string High24Hour { get; set; }
-        public string Low24Hour { get; set; }
-        public string LastMarket { get; set; }
-        public long Timestamp { get; set; }
+        public decimal OpenHour { get; set; }
+        public decimal HighHour { get; set; }
+        public decimal LowHour { get; set; }
+        public decimal Open24Hour { get; set; }
+        public decimal High24Hour { get; set; }
+        public decimal Low24Hour { get; set; }
+        public decimal LastMarket { get; set; }
     }
 }

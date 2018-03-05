@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading;
+using System.Threading.Tasks;
 using CryptoKeeper.Domain.Constants;
 using CryptoKeeper.Domain.DataObjects.Dtos;
 using CryptoKeeper.Domain.DataObjects.Dtos.CryptoCompare;
@@ -137,7 +138,8 @@ namespace CryptoKeeper.Domain.Services
             {
                 if (retry < 5)
                 {
-                    Thread.Sleep(5000);
+                    //Thread.Sleep(5000);
+                    Task.Delay(5000).Wait();
                     retry++;
                     return GetData<T>(url);
                 }

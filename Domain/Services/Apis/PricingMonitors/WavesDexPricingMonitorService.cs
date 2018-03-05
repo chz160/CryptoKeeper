@@ -28,8 +28,8 @@ namespace CryptoKeeper.Domain.Services.Apis.PricingMonitors
 
         public void Monitor()
         {
-            while (true)
-            {
+            //while (true)
+            //{
                 var response = _apiService.Get<List<TickerDto>>(_apiService.PublicUrl, "/tickers");
                 var symbolList = _exchange.Coins.Select(n => n.Symbol)
                     .Union(_exchange.Coins.SelectMany(n => n.Coins).Select(n => n.Symbol)).ToList();
@@ -43,8 +43,8 @@ namespace CryptoKeeper.Domain.Services.Apis.PricingMonitors
                     var pricingItem = _builderFactory.Create<TickerDto, PricingItem>(product).Build();
                     PricingService.Instance.UpdatePricingForMinute(ExchangeConstants.WavesDex, product.FromSymbol, product.ToSymbol, pricingItem);
                 }
-                Thread.Sleep(60000);
-            }
+            //    Thread.Sleep(60000);
+            //}
         }
     }
 }

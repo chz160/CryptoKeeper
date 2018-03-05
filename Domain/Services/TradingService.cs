@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using CryptoKeeper.Domain.Constants;
 using CryptoKeeper.Domain.DataObjects.Dtos;
 using CryptoKeeper.Domain.DataObjects.Params;
@@ -45,6 +46,7 @@ namespace CryptoKeeper.Domain.Services
             {
                 Console.Write($"Getting top volume coins for {_primaryCoin}...");
                 _eligibleSymbols = _cryptoCompareDataService.GetTopVolumeSymbols(_primaryCoin).ToList();
+                _eligibleSymbols = _eligibleSymbols.Where(m => m != "BTG").ToList();
                 Console.WriteLine("Done.");
                 //_exchanges = _cryptoCompareDataService.GetTopExchangesForPair(_primaryCoin, _valueCoin);
                 //_cryptoCompareDataService.GetExchangeCoins(_primaryCoin, _valueCoin, _exchanges, _eligibleSymbols);
@@ -92,20 +94,20 @@ namespace CryptoKeeper.Domain.Services
                     if (exchangePairParam.LowestExchange == null || exchangePairParam.HighestExchange == null)
                     {
                         Console.WriteLine($"An optimal exchange path was not found for {_primaryCoin}. Will try again in 1 minute.");
-                        Thread.Sleep(1000 * 60 * 1);
+                        Task.Delay(1000 * 60 * 1).Wait();
                         continue;
                     }
-                    Console.WriteLine($"Buying {exchangePairParam.TrackbackFromCoin.Symbol} from {exchangePairParam.LowestExchange.Name} for {exchangePairParam.TrackbackFromCoin.Coins.First(m=>m.Symbol == _primaryCoin).Price} then selling at {exchangePairParam.HighestExchange.Name} for {exchangePairParam.TrackbackToCoin.Coins.First(m => m.Symbol == _primaryCoin).Price} at {decimal.Round(exchangePairParam.TrackbackPercentDiff * -100, 2, MidpointRounding.ToEven)}%");
+                    Console.WriteLine($"Buying {exchangePairParam.TrackbackFromCoin.Symbol} from {exchangePairParam.LowestExchange.Name} for {exchangePairParam.TrackbackFromCoin.Coins.First(m=>m.Symbol == _primaryCoin).Ask} then selling at {exchangePairParam.HighestExchange.Name} for {exchangePairParam.TrackbackToCoin.Coins.First(m => m.Symbol == _primaryCoin).Bid} at {decimal.Round(exchangePairParam.TrackbackPercentDiff * -100, 2, MidpointRounding.ToEven)}%");
 
                     decimal initialCoinAmount = _investment;
                     decimal buyTrackbackTakerFee = _apiServiceFactory.Create(exchangePairParam.LowestExchange).TakerFee;
                     decimal initialCoinAmountMinusTakerFee = initialCoinAmount - buyTrackbackTakerFee;
-                    decimal purchasedTrackbackAmount = initialCoinAmountMinusTakerFee / exchangePairParam.TrackbackFromCoin.Coins.First(m => m.Symbol == _primaryCoin).Price;
+                    decimal purchasedTrackbackAmount = initialCoinAmountMinusTakerFee / exchangePairParam.TrackbackFromCoin.Coins.First(m => m.Symbol == _primaryCoin).Ask;
                     decimal firstNetworkTransferFee = PricingService.Instance.GetWithdrawalFeesForExchangeAndSymbol(exchangePairParam.LowestExchange, exchangePairParam.TrackbackFromCoin.Symbol);
                     decimal purchasedTrackbackAmountMinusTransferFee = purchasedTrackbackAmount - firstNetworkTransferFee;
                     decimal buyPrimaryTakerFee = _apiServiceFactory.Create(exchangePairParam.HighestExchange).TakerFee;
                     decimal trackBackAmountMinusTakerFee = purchasedTrackbackAmountMinusTransferFee - buyPrimaryTakerFee;
-                    decimal purchasePrimaryAmount = trackBackAmountMinusTakerFee * exchangePairParam.TrackbackToCoin.Coins.First(m => m.Symbol == _primaryCoin).Price;
+                    decimal purchasePrimaryAmount = trackBackAmountMinusTakerFee * exchangePairParam.TrackbackToCoin.Coins.First(m => m.Symbol == _primaryCoin).Ask;
 
                     //Console.WriteLine($"Projected gain from buying {exchangePairParam.TrackbackFromCoin.Symbol} from {exchangePairParam.LowestExchange.Name} ({exchangePairParam.LowestExchange.Coins.First(m => m.Symbol == _primaryCoin).Coins.First(m => _valueCoin.Contains(m.Symbol)).Price}) to {exchangePairParam.HighestExchange.Name} ({exchangePairParam.HighestExchange.Coins.First(m => m.Symbol == _primaryCoin).Coins.First(m => _valueCoin.Contains(m.Symbol)).Price}) is {decimal.Round(exchangePairParam.PrimaryPercentDiff * -100, 2, MidpointRounding.ToEven)}%");
                     //Console.Write($"Waiting on transfer if {exchangePairParam.PrimaryCoin} from {exchangePairParam.LowestExchange.Name} to {exchangePairParam.HighestExchange.Name}...");
@@ -151,7 +153,7 @@ namespace CryptoKeeper.Domain.Services
 
                     //_investment = decimal.Round(usdTotal, 2, MidpointRounding.ToEven);
                     //Console.WriteLine($"Investment grew {decimal.Round(gainsAfterRoundTrip / initialCoinAmount * 100, 2, MidpointRounding.ToEven)}% to ${_investment}!");
-                    Thread.Sleep(1000 * 60);
+                    Task.Delay(1000 * 60).Wait();
                     iteration++;
 
                     //Console.WriteLine("Press any key to continue.");
@@ -161,7 +163,7 @@ namespace CryptoKeeper.Domain.Services
             catch (NoOptimalExchangeException noOptExcEx)
             {
                 Console.WriteLine(noOptExcEx.Message);
-                Thread.Sleep(1000 * 60 * 5);
+                Task.Delay(1000 * 60 * 5).Wait();
                 Trade();
             }
         }
@@ -193,15 +195,15 @@ namespace CryptoKeeper.Domain.Services
                             m.Symbol == highestTrackBackCoin.Symbol &&
                             m.Coins.Any(n => n.Symbol == param.PrimaryCoin));
                         if (lowestTrackBackCoin != null &&
-                            lowestTrackBackCoin.Coins.Any(m => m.Symbol == param.PrimaryCoin && m.Price != 0) &&
-                            highestTrackBackCoin.Coins.Any(m => m.Symbol == param.PrimaryCoin && m.Price != 0))
+                            lowestTrackBackCoin.Coins.Any(m => m.Symbol == param.PrimaryCoin && m.Ask != 0 && m.Bid != 0) &&
+                            highestTrackBackCoin.Coins.Any(m => m.Symbol == param.PrimaryCoin && m.Ask != 0 && m.Bid != 0))
                         {
-                            var trackbackFromValue = lowestTrackBackCoin.Coins.First(m => m.Symbol == param.PrimaryCoin).Price;
-                            var trackbackToValue = highestTrackBackCoin.Coins.First(m => m.Symbol == param.PrimaryCoin).Price; 
+                            var trackbackFromValue = lowestTrackBackCoin.Coins.First(m => m.Symbol == param.PrimaryCoin).Ask;
+                            var trackbackToValue = highestTrackBackCoin.Coins.First(m => m.Symbol == param.PrimaryCoin).Bid; 
                             var checkTrackBackPercentDiff = _mathService.PercentDiff(trackbackFromValue, trackbackToValue);
 
-                            var primaryFromValue = possibleLowest.Coins.FirstOrDefault(m => m.Symbol == highestTrackBackCoin.Symbol)?.Coins?.FirstOrDefault(m => m.Symbol == param.PrimaryCoin)?.Price ?? decimal.MaxValue;
-                            var primaryToValue = possibleHighest.Coins.FirstOrDefault(m => m.Symbol == highestTrackBackCoin.Symbol)?.Coins?.FirstOrDefault(m => m.Symbol == param.PrimaryCoin)?.Price ?? decimal.MaxValue;
+                            var primaryFromValue = possibleLowest.Coins.FirstOrDefault(m => m.Symbol == highestTrackBackCoin.Symbol)?.Coins?.FirstOrDefault(m => m.Symbol == param.PrimaryCoin)?.Bid ?? decimal.MaxValue;
+                            var primaryToValue = possibleHighest.Coins.FirstOrDefault(m => m.Symbol == highestTrackBackCoin.Symbol)?.Coins?.FirstOrDefault(m => m.Symbol == param.PrimaryCoin)?.Ask ?? decimal.MaxValue;
                             var checkPrimaryPercentDiff = _mathService.PercentDiff(primaryFromValue, primaryToValue);
 
                             var checkTotalPercentDiff = checkPrimaryPercentDiff + checkTrackBackPercentDiff;
@@ -220,7 +222,7 @@ namespace CryptoKeeper.Domain.Services
                                 primaryToValue != decimal.MaxValue)
                             {
                                 if (//checkPrimaryPercentDiff < 0.00m &&
-                                    checkTrackBackPercentDiff < -0.05m &&
+                                    checkTrackBackPercentDiff < -0.015m &&
                                     checkTrackBackPercentDiff > -0.10m &&
                                     //checkTotalPercentDiff < -0.05m &&
                                     (checkTrackBackPercentDiff < param.TrackbackPercentDiff || param.TrackbackPercentDiff == 0))

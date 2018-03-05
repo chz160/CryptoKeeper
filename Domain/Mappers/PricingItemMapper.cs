@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Globalization;
+using System.Linq;
 using CryptoKeeper.Domain.DataObjects.Dtos;
 using CryptoKeeper.Domain.Mappers.Interfaces;
 
@@ -17,7 +18,14 @@ namespace CryptoKeeper.Domain.Mappers
         IUpdateMapper<DataObjects.Dtos.BitBay.TickerDto, PricingItem>,
         IUpdateMapper<DataObjects.Dtos.BitMarket.TickerDto, PricingItem>,
         IUpdateMapper<DataObjects.Dtos.Bitstamp.TickerDto, PricingItem>,
-        IUpdateMapper<DataObjects.Dtos.Bleutrade.TickerDto, PricingItem>
+        IUpdateMapper<DataObjects.Dtos.Bleutrade.TickerDto, PricingItem>,
+        IUpdateMapper<DataObjects.Dtos.BXinth.MarketDto, PricingItem>,
+        IUpdateMapper<DataObjects.Dtos.Exmo.TickerDto, PricingItem>,
+        IUpdateMapper<DataObjects.Dtos.HuobiPro.TickerDto, PricingItem>,
+        IUpdateMapper<DataObjects.Dtos.TrustDex.TickerDto, PricingItem>,
+        IUpdateMapper<DataObjects.Dtos.Exx.TickerDto, PricingItem>,
+        IUpdateMapper<DataObjects.Dtos.Gatecoin.TickerDto, PricingItem>,
+        IUpdateMapper<DataObjects.Dtos.Gemini.TickerDto, PricingItem>
     {
         public void Update(DataObjects.Dtos.CryptoCompare.HistoMinuteItem sourceType, PricingItem updateType)
         {
@@ -45,10 +53,11 @@ namespace CryptoKeeper.Domain.Mappers
 
         public void Update(DataObjects.Dtos.CryptoCompare.TickerDto sourceType, PricingItem updateType)
         {
-            updateType.Timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds(); //sourceType.Timestamp > 1514764800 ? sourceType.Timestamp : DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            updateType.Timestamp = sourceType.LastUpdate;
             updateType.Price = sourceType.Price;
-            //updateType.Ask = sourceType.;
-            //updateType.Bid = sourceType.;
+            updateType.Ask = sourceType.Offer;
+            updateType.Bid = sourceType.Bid;
+            updateType.Volume = sourceType.Volume24Hour;
         }
 
         public void Update(DataObjects.Dtos.HitBtc.TickerDto sourceType, PricingItem updateType)
@@ -123,6 +132,69 @@ namespace CryptoKeeper.Domain.Mappers
             updateType.Ask = decimal.Parse(sourceType.Ask, NumberStyles.Float);
             updateType.Bid = decimal.Parse(sourceType.Bid, NumberStyles.Float);
             updateType.Price = (updateType.Ask + updateType.Bid) / 2;
+        }
+
+        public void Update(DataObjects.Dtos.BXinth.MarketDto sourceType, PricingItem updateType)
+        {
+            updateType.Timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            updateType.Ask = sourceType.orderbook.asks.highbid;
+            updateType.Bid = sourceType.orderbook.bids.highbid;
+            updateType.Price = (updateType.Ask + updateType.Bid) / 2;
+            updateType.Volume = sourceType.volume_24hours;
+        }
+
+        public void Update(DataObjects.Dtos.Exmo.TickerDto sourceType, PricingItem updateType)
+        {
+            updateType.Timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            updateType.Ask = decimal.Parse(sourceType.sell_price, NumberStyles.Float);
+            updateType.Bid = decimal.Parse(sourceType.buy_price, NumberStyles.Float);
+            updateType.Price = (updateType.Ask + updateType.Bid) / 2;
+            updateType.Volume = decimal.Parse(sourceType.vol, NumberStyles.Float);
+        }
+
+        public void Update(DataObjects.Dtos.HuobiPro.TickerDto sourceType, PricingItem updateType)
+        {
+            updateType.Timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            updateType.Ask = sourceType.ask[0];
+            updateType.Bid = sourceType.bid[0];
+            updateType.Price = (updateType.Ask + updateType.Bid) / 2;
+            updateType.Volume = sourceType.vol;
+        }
+
+        public void Update(DataObjects.Dtos.TrustDex.TickerDto sourceType, PricingItem updateType)
+        {
+            updateType.Timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            updateType.Ask = decimal.Parse(sourceType.lowestAsk, NumberStyles.Float);
+            updateType.Bid = decimal.Parse(sourceType.highestBid, NumberStyles.Float);
+            updateType.Price = (updateType.Ask + updateType.Bid) / 2;
+            updateType.Volume = decimal.Parse(sourceType.baseVolume, NumberStyles.Float);
+        }
+
+        public void Update(DataObjects.Dtos.Exx.TickerDto sourceType, PricingItem updateType)
+        {
+            updateType.Timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            updateType.Ask = decimal.Parse(sourceType.sell, NumberStyles.Float);
+            updateType.Bid = decimal.Parse(sourceType.buy, NumberStyles.Float);
+            updateType.Price = (updateType.Ask + updateType.Bid) / 2;
+            updateType.Volume = decimal.Parse(sourceType.vol, NumberStyles.Float);
+        }
+
+        public void Update(DataObjects.Dtos.Gatecoin.TickerDto sourceType, PricingItem updateType)
+        {
+            updateType.Timestamp = sourceType.createDateTime;
+            updateType.Ask = sourceType.ask;
+            updateType.Bid = sourceType.bid;
+            updateType.Price = (updateType.Ask + updateType.Bid) / 2;
+            updateType.Volume = sourceType.volume;
+        }
+
+        public void Update(DataObjects.Dtos.Gemini.TickerDto sourceType, PricingItem updateType)
+        {
+            updateType.Timestamp = DateTimeOffset.FromUnixTimeMilliseconds(long.Parse(sourceType.volume["timestamp"])).ToUnixTimeSeconds();
+            updateType.Ask = decimal.Parse(sourceType.ask, NumberStyles.Float);
+            updateType.Bid = decimal.Parse(sourceType.bid, NumberStyles.Float);
+            updateType.Price = (updateType.Ask + updateType.Bid) / 2;
+            updateType.Volume = decimal.Parse(sourceType.volume.First().Value, NumberStyles.Float);
         }
     }
 }

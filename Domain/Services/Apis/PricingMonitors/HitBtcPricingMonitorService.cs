@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
+using System.Threading;
 using CryptoKeeper.Domain.Builders.Factories;
 using CryptoKeeper.Domain.Builders.Interfaces;
 using CryptoKeeper.Domain.Constants;

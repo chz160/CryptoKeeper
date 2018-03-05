@@ -28,8 +28,8 @@ namespace CryptoKeeper.Domain.Services.Apis.PricingMonitors
 
         public void Monitor()
         {
-            while (true)
-            {
+            //while (true)
+            //{
                 foreach (var coin in _exchange.Coins)
                 {
                     foreach (var childCoin in coin.Coins)
@@ -39,8 +39,8 @@ namespace CryptoKeeper.Domain.Services.Apis.PricingMonitors
                         PricingService.Instance.UpdatePricingForMinute(ExchangeConstants.Bleutrade, coin.Symbol, childCoin.Symbol, pricingItem);
                     }
                 }
-                Thread.Sleep(60000);
-            }
+            //    Thread.Sleep(60000);
+            //}
         }
     }
 }

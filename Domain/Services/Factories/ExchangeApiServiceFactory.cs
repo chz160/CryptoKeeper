@@ -48,11 +48,11 @@ namespace CryptoKeeper.Domain.Services.Factories
             }
             if (exchange.Name == ExchangeConstants.BXinth)
             {
-                return new BXinthApiService();
+                return new BXinthApiService(exchange);
             }
             if (exchange.Name == ExchangeConstants.CexIo)
             {
-                return new CexIoApiService();
+                return new CexIoApiService(exchange);
             }
             if (exchange.Name == ExchangeConstants.Coinbase)
             {
@@ -76,15 +76,15 @@ namespace CryptoKeeper.Domain.Services.Factories
             }
             if (exchange.Name == ExchangeConstants.Exmo)
             {
-                return new ExmoApiService();
+                return new ExmoApiService(exchange);
             }
             if (exchange.Name == ExchangeConstants.Exx)
             {
-                return new ExxApiService();
+                return new ExxApiService(exchange);
             }
             if (exchange.Name == ExchangeConstants.Gatecoin)
             {
-                return new GatecoinApiService();
+                return new GatecoinApiService(exchange);
             }
             if (exchange.Name == ExchangeConstants.Gateio)
             {
@@ -92,7 +92,7 @@ namespace CryptoKeeper.Domain.Services.Factories
             }
             if (exchange.Name == ExchangeConstants.Gemini)
             {
-                return new GeminiApiService();
+                return new GeminiApiService(exchange);
             }
             if (exchange.Name == ExchangeConstants.HitBtc)
             {
@@ -100,7 +100,7 @@ namespace CryptoKeeper.Domain.Services.Factories
             }
             if (exchange.Name == ExchangeConstants.HuobiPro)
             {
-                return new HuobiProApiService();
+                return new HuobiProApiService(exchange);
             }
             if (exchange.Name == ExchangeConstants.ItBit)
             {
@@ -156,7 +156,7 @@ namespace CryptoKeeper.Domain.Services.Factories
             }
             if (exchange.Name == ExchangeConstants.TrustDex)
             {
-                return new TrustDexApiService();
+                return new TrustDexApiService(exchange);
             }
             if (exchange.Name == ExchangeConstants.TuxExchange)
             {

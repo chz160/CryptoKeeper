@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Threading;
 using CryptoKeeper.Domain.Builders.Factories;
 using CryptoKeeper.Domain.Builders.Interfaces;
 using CryptoKeeper.Domain.Constants;
@@ -51,6 +52,7 @@ namespace CryptoKeeper.Domain.Services.Apis.PricingMonitors
 
         private void OnMessage(string message, WebSocketWrapper wrapper)
         {
+            if (string.IsNullOrEmpty(message)) return;
             var items = JsonConvert.DeserializeObject<TickerChannelDto>(message);
             if (items.Type == "ticker")
             {

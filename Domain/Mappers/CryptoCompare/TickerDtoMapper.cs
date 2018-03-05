@@ -7,47 +7,60 @@ using CryptoKeeper.Domain.Mappers.Interfaces;
 
 namespace CryptoKeeper.Domain.Mappers.CryptoCompare
 {
-    /// Pretty sure that not all the these fields are correct. 
-    /// Not really sure I have the bitwise operator stuff correct. 
-    /// Attempted to mimic the ticker logic in CryptoCompares 
-    /// example project on GitHub. Fields don't always line up right.
-    public class TickerDtoMapper : IUpdateMapper<string[], TickerDto>
+    public class TickerDtoMapper : IUpdateMapper<SocketDataWrapperDto, TickerDto>
     {
-        public void Update(string[] sourceType, TickerDto updateType)
+        public void Update(SocketDataWrapperDto sourceType, TickerDto updateType)
         {
-            if (sourceType != null && sourceType.Any() && updateType != null)
+            var data = sourceType.Data;
+            if (data != null && data.Any() && updateType != null)
             {
-                try
+                var length = data.Length;
+                var mask = data[length - 1];
+                var maskInt = int.Parse(mask, NumberStyles.HexNumber);
+                var currentField = 0;
+                var currentFieldOfPreviousData = 0;
+                foreach (var key in _fields.Keys)
                 {
-                    var length = sourceType.Length;
-                    var mask = sourceType[length - 1];
-                    var maskInt = int.Parse(mask, NumberStyles.HexNumber);
-                    var currentField = 0;
-                    foreach (var key in _fields.Keys)
+                    if (currentField == length - 1) break;
+                    var myType = typeof(TickerDto);
+                    var myPropInfo = myType.GetProperty(key);
+                    if (_fields[key] == 0)
                     {
-                        if (currentField == length - 1) break;
-                        if (_fields[key] == 0)
+                        myPropInfo.SetValue(updateType, data[currentField], null);
+                        currentField++;
+                    }
+                    else if (Convert.ToBoolean(maskInt & _fields[key]))
+                    {
+                        if (key == "LastUpdate")
                         {
-                            var myType = typeof(TickerDto);
-                            var myPropInfo = myType.GetProperty(key);
-                            myPropInfo.SetValue(updateType, sourceType[currentField], null);
-                        }
-                        else if (Convert.ToBoolean(maskInt & _fields[key]))
-                        {
-                            var myType = typeof(TickerDto);
-                            var myPropInfo = myType.GetProperty(key);
-                            myPropInfo.SetValue(updateType, decimal.Parse(sourceType[currentField], NumberStyles.Float), null);
+                            myPropInfo.SetValue(updateType, long.Parse(data[currentField]), null);
                         }
                         else
                         {
-                            //Not really sure what to do here.
+                            myPropInfo.SetValue(updateType, decimal.Parse(data[currentField], NumberStyles.Float), null);
+                        }
+                        if (sourceType.PreviousData != null &&
+                            sourceType.PreviousData.Length >= currentFieldOfPreviousData + 1)
+                        {
+                            sourceType.PreviousData[currentFieldOfPreviousData] = data[currentField];
                         }
                         currentField++;
                     }
-                }
-                catch (Exception ex)
-                {
-                    //Not really sure what to do here.
+                    else // for fields that are not in the update, pull from previous data
+                    {
+                        if (sourceType.PreviousData != null && sourceType.PreviousData.Length >= currentFieldOfPreviousData + 1)
+                        {
+                            if (key == "LastUpdate")
+                            {
+                                myPropInfo.SetValue(updateType, long.Parse(sourceType.PreviousData[currentFieldOfPreviousData]), null);
+                            }
+                            else
+                            {
+                                myPropInfo.SetValue(updateType, decimal.Parse(sourceType.PreviousData[currentFieldOfPreviousData], NumberStyles.Float), null);
+                            }
+                        }
+                    }
+                    currentFieldOfPreviousData++;
                 }
                 //File.AppendAllLines(@"C:\temp\socketdata.txt", new List<string> { JsonConvert.SerializeObject(updateType) }, Encoding.UTF8);
             }
@@ -55,8 +68,8 @@ namespace CryptoKeeper.Domain.Mappers.CryptoCompare
         
         private Dictionary<string, int> _fields = new Dictionary<string, int>
         {
-            {"MessageType",00},             // hex for binary 0, it is a special case of fields that are always there
-            {"Market", 0x0},           // hex for binary 0, it is a special case of fields that are always there
+            {"MessageType",0x0},      // hex for binary 0, it is a special case of fields that are always there
+            {"Market", 0x0},          // hex for binary 0, it is a special case of fields that are always there
             {"FromSymbol",0x0},       // hex for binary 0, it is a special case of fields that are always there
             {"ToSymbol",0x0},         // hex for binary 0, it is a special case of fields that are always there
             {"Flags",0x0},            // hex for binary 0, it is a special case of fields that are always there

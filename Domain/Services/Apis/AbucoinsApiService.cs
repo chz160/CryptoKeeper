@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using CryptoKeeper.Domain.Constants;
@@ -35,12 +34,14 @@ namespace CryptoKeeper.Domain.Services.Apis
         public override decimal MakerFee => 0m;
         public override decimal TakerFee => 0.001m;
 
-        protected override void BuildHeaders(HttpWebRequest request, string baseUrl, string relativeUrl, string body)
-        { }
-
         public override IAmPricingMonitor MonitorPrices()
         {
             return new AbucoinsPricingMonitorService(this, _exchange);
+        }
+
+        public override decimal GetBalances(string symbol)
+        {
+            throw new System.NotImplementedException();
         }
 
         public override void GetProducts(Exchange exchange, List<string> eligibleSymbols)
@@ -57,11 +58,6 @@ namespace CryptoKeeper.Domain.Services.Apis
                 }
                 coin.Coins.Add(new Coin { Symbol = product.quote_currency });
             }
-        }
-
-        public override decimal GetBalances(string symbol)
-        {
-            throw new System.NotImplementedException();
         }
     }
 }
