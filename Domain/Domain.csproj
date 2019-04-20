@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
     <AssemblyName>CryptoKeeper.Domain</AssemblyName>
     <RootNamespace>CryptoKeeper.Domain</RootNamespace>
   </PropertyGroup>
@@ -24,9 +24,14 @@
 
   <ItemGroup>
     <PackageReference Include="Colorful.Console" Version="1.2.1" />
-    <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.1.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
     <PackageReference Include="SocketIoClientDotNet" Version="1.0.4" />
     <PackageReference Include="System.Drawing.Common" Version="4.5.0-preview1-25914-04" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Entities\Entities.Pricing.csproj" />
   </ItemGroup>
 
   <ItemGroup>

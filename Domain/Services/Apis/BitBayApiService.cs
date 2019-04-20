@@ -1,5 +1,7 @@
-﻿using System.Security.Cryptography;
+﻿using System;
+using System.Security.Cryptography;
 using System.Text;
+using CryptoKeeper.Domain.Builders.Interfaces;
 using CryptoKeeper.Domain.Constants;
 using CryptoKeeper.Domain.DataObjects.Dtos;
 using CryptoKeeper.Domain.Enums;
@@ -11,10 +13,15 @@ namespace CryptoKeeper.Domain.Services.Apis
     public class BitBayApiService : ApiService
     {
         private readonly Exchange _exchange;
+        private readonly IServiceProvider _serviceProvider;
+        private readonly IBuilderFactory _builderFactory;
 
-        public BitBayApiService(Exchange exchange)
+        public BitBayApiService(Exchange exchange, IConfigService configService, ICryptoCompareDataService cryptoCompareDataService, IServiceProvider serviceProvider, IBuilderFactory builderFactory)
+            : base(configService, cryptoCompareDataService, serviceProvider)
         {
             _exchange = exchange;
+            _serviceProvider = serviceProvider;
+            _builderFactory = builderFactory;
         }
 
         public override string Name => ExchangeConstants.BitBay;
@@ -31,7 +38,7 @@ namespace CryptoKeeper.Domain.Services.Apis
 
         public override IAmPricingMonitor MonitorPrices()
         {
-            return new BitBayPricingMonitorService(this, _exchange);
+            return new BitBayPricingMonitorService(this, _exchange, _builderFactory, _serviceProvider);
         }
 
         public override decimal GetBalances(string symbol)

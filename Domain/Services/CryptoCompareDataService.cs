@@ -18,8 +18,8 @@ namespace CryptoKeeper.Domain.Services
         private readonly IConfigService _configService;
         private const string BaseUrl = "https://min-api.cryptocompare.com/data";
 
-        public CryptoCompareDataService() : this(new ConfigService())
-        { }
+        //public CryptoCompareDataService() : this(new ConfigService())
+        //{ }
 
         public CryptoCompareDataService(IConfigService configService)
         {

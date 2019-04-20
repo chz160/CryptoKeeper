@@ -20,5 +20,6 @@ namespace CryptoKeeper.Domain.DataObjects.Params
         public Coin TrackbackFromCoin { get; set; }
         public decimal TrackbackPercentDiff { get; set; }
         public decimal TotalPercentDiff { get; set; }
+        public bool Profitable { get; set; }
     }
 }

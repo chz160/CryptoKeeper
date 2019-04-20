@@ -1,24 +1,32 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using CryptoKeeper.Domain.Builders.Factories;
+using CryptoKeeper.Domain.Builders.Interfaces;
 using CryptoKeeper.Domain.Constants;
 using CryptoKeeper.Domain.DataObjects.Dtos;
 using CryptoKeeper.Domain.DataObjects.Dtos.Bleutrade;
 using CryptoKeeper.Domain.Enums;
 using CryptoKeeper.Domain.Services.Apis.PricingMonitors;
 using CryptoKeeper.Domain.Services.Interfaces;
+using CryptoKeeper.Entities.Pricing.Models;
 
 namespace CryptoKeeper.Domain.Services.Apis
 {
     public class BleutradeApiService : ApiService
     {
         private readonly Exchange _exchange;
+        private readonly IServiceProvider _serviceProvider;
+        private readonly IBuilderFactory _builderFactory;
 
-        public BleutradeApiService(Exchange exchange)
+        public BleutradeApiService(Exchange exchange, IConfigService configService, ICryptoCompareDataService cryptoCompareDataService, IServiceProvider serviceProvider, IBuilderFactory builderFactory)
+            : base(configService, cryptoCompareDataService, serviceProvider)
         {
             _exchange = exchange;
+            _serviceProvider = serviceProvider;
+            _builderFactory = builderFactory;
         }
 
         public override string Name => ExchangeConstants.Bleutrade;
@@ -35,7 +43,7 @@ namespace CryptoKeeper.Domain.Services.Apis
 
         public override IAmPricingMonitor MonitorPrices()
         {
-            return new BleutradePricingMonitorService(this, _exchange);
+            return new BleutradePricingMonitorService(this, _exchange, _builderFactory, _serviceProvider);
         }
 
         public override List<WithdrawalFee> GetWithdrawalFees()

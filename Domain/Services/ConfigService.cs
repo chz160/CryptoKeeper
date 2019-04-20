@@ -15,8 +15,8 @@ namespace CryptoKeeper.Domain.Services
     {
         private readonly IBuilderFactory _builderFactory;
 
-        public ConfigService() : this(new BuilderFactory())
-        { }
+        //public ConfigService() : this(new BuilderFactory())
+        //{ }
 
         public ConfigService(IBuilderFactory builderFactory)
         {

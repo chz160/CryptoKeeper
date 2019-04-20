@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using CryptoKeeper.Domain.Constants;
@@ -10,6 +11,10 @@ namespace CryptoKeeper.Domain.Services.Apis
 {
     public class LakeBtcApiService : ApiService
     {
+        public LakeBtcApiService(IConfigService configService, ICryptoCompareDataService cryptoCompareDataService, IServiceProvider serviceProvider)
+            : base(configService, cryptoCompareDataService, serviceProvider)
+        { }
+
         public override string Name => ExchangeConstants.LakeBtc;
         public override string PublicUrl => "";
         public override string PrivateUrl => "";

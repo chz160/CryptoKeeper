@@ -7,8 +7,10 @@ using CryptoKeeper.Domain.Builders.Interfaces;
 using CryptoKeeper.Domain.Constants;
 using CryptoKeeper.Domain.DataObjects.Dtos;
 using CryptoKeeper.Domain.DataObjects.Dtos.HitBtc;
+using CryptoKeeper.Domain.Services.Factories;
 using CryptoKeeper.Domain.Services.Interfaces;
 using CryptoKeeper.Domain.Utilities;
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 
 namespace CryptoKeeper.Domain.Services.Apis.PricingMonitors
@@ -18,16 +20,15 @@ namespace CryptoKeeper.Domain.Services.Apis.PricingMonitors
         private readonly IAmAnApiService _apiService;
         private readonly Exchange _exchange;
         private readonly IBuilderFactory _builderFactory;
+        private readonly IServiceProvider _serviceProvider;
         private Dictionary<string, string> _symbolLookup;
 
-        public HitBtcPricingMonitorService(IAmAnApiService apiService, Exchange exchange) : this(apiService, exchange, new BuilderFactory())
-        { }
-
-        public HitBtcPricingMonitorService(IAmAnApiService apiService, Exchange exchange, IBuilderFactory builderFactory)
+        public HitBtcPricingMonitorService(IAmAnApiService apiService, Exchange exchange, IBuilderFactory builderFactory, IServiceProvider serviceProvider)
         {
             _apiService = apiService;
             _exchange = exchange;
             _builderFactory = builderFactory;
+            _serviceProvider = serviceProvider;
         }
 
         public void Monitor()
@@ -42,7 +43,7 @@ namespace CryptoKeeper.Domain.Services.Apis.PricingMonitors
             }
             catch (Exception ex)
             {
-
+                Colorful.Console.WriteLine($"HitBtc Monitor(): {ex.Message}\r\n{ex.StackTrace}", Color.Red);
             }
         }
 
@@ -64,7 +65,7 @@ namespace CryptoKeeper.Domain.Services.Apis.PricingMonitors
         private void OnMessage(string message, WebSocketWrapper wrapper)
         {
             var item = JsonConvert.DeserializeObject<ResponseDto<TickerDto>>(message);
-            if (item.Method == "ticker")
+            if (item.Method == "ticker" && !string.IsNullOrEmpty(item.Params.Ask) && !string.IsNullOrEmpty(item.Params.Bid))
             {
                 var pricingItem = _builderFactory.Create<TickerDto, PricingItem>(item.Params).Build();
                 if (_symbolLookup.ContainsKey(item.Params.Symbol))
@@ -72,7 +73,7 @@ namespace CryptoKeeper.Domain.Services.Apis.PricingMonitors
                     var symbolPair = _symbolLookup[item.Params.Symbol].Split(",");
                     var fromSymbol = symbolPair[0];
                     var toSymbol = symbolPair[1];
-                    PricingService.Instance.UpdatePricingForMinute(ExchangeConstants.HitBtc, fromSymbol, toSymbol, pricingItem);
+                    _serviceProvider.GetRequiredService<IPricingService>().UpdatePricingForMinute(ExchangeConstants.HitBtc, fromSymbol, toSymbol, pricingItem);
                 }
             }
         }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using CryptoKeeper.Domain.DataObjects.Dtos;
 using CryptoKeeper.Domain.Mappers.CryptoCompare;
 using CryptoKeeper.Domain.Mappers.Interfaces;
+using CryptoKeeper.Entities.Pricing.Models;
 using Newtonsoft.Json.Linq;
 
 namespace CryptoKeeper.Domain.Mappers.Factories
@@ -41,6 +42,7 @@ namespace CryptoKeeper.Domain.Mappers.Factories
                 typeof(SOURCETYPE) == typeof(DataObjects.Dtos.Exx.TickerDto) && typeof(TOTYPE) == typeof(PricingItem) ||
                 typeof(SOURCETYPE) == typeof(DataObjects.Dtos.Gatecoin.TickerDto) && typeof(TOTYPE) == typeof(PricingItem) ||
                 typeof(SOURCETYPE) == typeof(DataObjects.Dtos.Gemini.TickerDto) && typeof(TOTYPE) == typeof(PricingItem) ||
+                typeof(SOURCETYPE) == typeof(DataObjects.Dtos.Poloniex.TickerDto) && typeof(TOTYPE) == typeof(PricingItem) ||
                 typeof(SOURCETYPE) == typeof(DataObjects.Dtos.BitTrex.MarketSummaryDto) && typeof(TOTYPE) == typeof(PricingItem))
             {
                 return new PricingItemMapper() as IUpdateMapper<SOURCETYPE, TOTYPE>;

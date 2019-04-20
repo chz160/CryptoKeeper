@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text;
 using CryptoKeeper.Domain.DataObjects.Dtos;
 using CryptoKeeper.Domain.Enums;
+using CryptoKeeper.Entities.Pricing.Models;
 
 namespace CryptoKeeper.Domain.Services.Interfaces
 {

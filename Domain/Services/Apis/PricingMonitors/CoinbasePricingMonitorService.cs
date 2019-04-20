@@ -2,14 +2,13 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using System.Threading;
-using CryptoKeeper.Domain.Builders.Factories;
 using CryptoKeeper.Domain.Builders.Interfaces;
 using CryptoKeeper.Domain.Constants;
 using CryptoKeeper.Domain.DataObjects.Dtos;
 using CryptoKeeper.Domain.DataObjects.Dtos.Coinbase;
 using CryptoKeeper.Domain.Services.Interfaces;
 using CryptoKeeper.Domain.Utilities;
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 
 namespace CryptoKeeper.Domain.Services.Apis.PricingMonitors
@@ -18,14 +17,13 @@ namespace CryptoKeeper.Domain.Services.Apis.PricingMonitors
     {
         private readonly IAmAnApiService _apiService;
         private readonly IBuilderFactory _builderFactory;
+        private readonly IServiceProvider _serviceProvider;
 
-        public CoinbasePricingMonitorService(IAmAnApiService apiService) : this(apiService, new BuilderFactory())
-        { }
-
-        public CoinbasePricingMonitorService(IAmAnApiService apiService, IBuilderFactory builderFactory)
+        public CoinbasePricingMonitorService(IAmAnApiService apiService, IBuilderFactory builderFactory, IServiceProvider serviceProvider)
         {
             _apiService = apiService;
             _builderFactory = builderFactory;
+            _serviceProvider = serviceProvider;
         }
 
         public void Monitor()
@@ -40,7 +38,7 @@ namespace CryptoKeeper.Domain.Services.Apis.PricingMonitors
             }
             catch (Exception ex)
             {
-
+                Colorful.Console.WriteLine($"Coinbase Monitor(): {ex.Message}\r\n{ex.StackTrace}", Color.Red);
             }
         }
 
@@ -59,7 +57,7 @@ namespace CryptoKeeper.Domain.Services.Apis.PricingMonitors
                 var pricingItem = _builderFactory.Create<TickerChannelDto, PricingItem>(items).Build();
                 var fromSymbol = items.Product_Id.Split("-")[0];
                 var toSymbol = items.Product_Id.Split("-")[1];
-                PricingService.Instance.UpdatePricingForMinute(ExchangeConstants.Coinbase, fromSymbol, toSymbol, pricingItem);
+                _serviceProvider.GetRequiredService<IPricingService>().UpdatePricingForMinute(ExchangeConstants.Coinbase, fromSymbol, toSymbol, pricingItem);
             }
         }
 

@@ -5,3 +5,7 @@
 5. Seems like occasionally when attempting to find the best trackback, we're not finding an optimal route and the last one is being used somehow.
 6. Create a service to convert coins to USD value for display. Maybe some background thread and monitors BTC -> USD for exchanges that service that market. Then when we want to see our $ value, simulate, if needed, a buy from our primary coin to BTC, then, if needed, transfer an exchagen witha BTC-USD market. Then report value  sans all the fees.
 7. Figure out what to do with kraken using XBT instead of BTC
+
+
+
+NOTE: Try consolidating down to BitStamp, BitTrex, Binance, Poloniex, and Coinbase

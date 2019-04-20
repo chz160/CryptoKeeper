@@ -16,7 +16,8 @@ namespace CryptoKeeper.Domain.Services.Apis
     {
         private readonly Exchange _exchange;
 
-        public CexIoApiService(Exchange exchange)
+        public CexIoApiService(Exchange exchange, IConfigService configService, ICryptoCompareDataService cryptoCompareDataService, IServiceProvider serviceProvider)
+            : base(configService, cryptoCompareDataService, serviceProvider)
         {
             _exchange = exchange;
         }

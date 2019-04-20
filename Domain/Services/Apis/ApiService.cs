@@ -7,10 +7,13 @@ using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using CryptoKeeper.Domain.DataObjects.Dtos;
 using CryptoKeeper.Domain.Enums;
 using CryptoKeeper.Domain.Services.Interfaces;
 using CryptoKeeper.Domain.Utilities;
+using CryptoKeeper.Entities.Pricing.Models;
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 
 namespace CryptoKeeper.Domain.Services.Apis
@@ -19,17 +22,17 @@ namespace CryptoKeeper.Domain.Services.Apis
     {
         protected readonly IConfigService _configService;
         private readonly ICryptoCompareDataService _cryptoCompareDataService;
+        private readonly IServiceProvider _serviceProvider;
         protected readonly ApiConfigurationData _configurationData;
-
-        public ApiService() : this(new ConfigService(), new CryptoCompareDataService())
-        { }
-
-        public ApiService(IConfigService configService, ICryptoCompareDataService cryptoCompareDataService)
+        
+        public ApiService(IConfigService configService, ICryptoCompareDataService cryptoCompareDataService, IServiceProvider serviceProvider)
         {
             _configService = configService;
             _cryptoCompareDataService = cryptoCompareDataService;
+            _serviceProvider = serviceProvider;
             _configurationData = configService.GetApiConfigurationForExchange(Name);
         }
+
         public abstract string Name { get; }
         public abstract string PublicUrl { get; }
         public abstract string PrivateUrl { get; }
@@ -46,7 +49,7 @@ namespace CryptoKeeper.Domain.Services.Apis
         public abstract PricingApiType PricingApiType { get; }
         public virtual decimal MakerFee => 0.0025m;
         public virtual decimal TakerFee => 0.0025m;
-        public virtual List<WithdrawalFee> WithdrawalFees => PricingService.Instance.GetWithdrawalFeesForExchange(this);
+        public virtual List<WithdrawalFee> WithdrawalFees => _serviceProvider.GetRequiredService<IPricingService>().GetWithdrawalFeesForExchange(this);
 
         public virtual List<WithdrawalFee> GetWithdrawalFees()
         {
@@ -139,6 +142,8 @@ namespace CryptoKeeper.Domain.Services.Apis
             {
                 if (_getRetryCount < 3)
                 {
+                    Colorful.Console.WriteLine($"Request to {baseUrl}{relativeUrl} failed. Retrying in 5 seconds.", Color.Red);
+                    Task.Delay(1000 * 5).Wait();
                     _getRetryCount++;
                     return Get<T>(baseUrl, relativeUrl, body);
                 }

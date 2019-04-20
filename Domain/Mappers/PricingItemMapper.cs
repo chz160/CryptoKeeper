@@ -25,7 +25,8 @@ namespace CryptoKeeper.Domain.Mappers
         IUpdateMapper<DataObjects.Dtos.TrustDex.TickerDto, PricingItem>,
         IUpdateMapper<DataObjects.Dtos.Exx.TickerDto, PricingItem>,
         IUpdateMapper<DataObjects.Dtos.Gatecoin.TickerDto, PricingItem>,
-        IUpdateMapper<DataObjects.Dtos.Gemini.TickerDto, PricingItem>
+        IUpdateMapper<DataObjects.Dtos.Gemini.TickerDto, PricingItem>,
+        IUpdateMapper<DataObjects.Dtos.Poloniex.TickerDto, PricingItem>
     {
         public void Update(DataObjects.Dtos.CryptoCompare.HistoMinuteItem sourceType, PricingItem updateType)
         {
@@ -37,8 +38,14 @@ namespace CryptoKeeper.Domain.Mappers
         {
             updateType.Timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
             updateType.Price = decimal.Parse(sourceType.Price, NumberStyles.Float);
-            updateType.Ask = decimal.Parse(sourceType.Best_Ask, NumberStyles.Float);
-            updateType.Bid = decimal.Parse(sourceType.Best_Bid, NumberStyles.Float);
+            if (!string.IsNullOrEmpty(sourceType.Best_Ask))
+            {
+                updateType.Ask = decimal.Parse(sourceType.Best_Ask, NumberStyles.Float);
+            }
+            if (!string.IsNullOrEmpty(sourceType.Best_Bid))
+            {
+                updateType.Bid = decimal.Parse(sourceType.Best_Bid, NumberStyles.Float);
+            }
             updateType.Volume = decimal.Parse(sourceType.Volume_24h, NumberStyles.Float);
         }
 
@@ -85,8 +92,14 @@ namespace CryptoKeeper.Domain.Mappers
         {
             updateType.Timestamp = DateTimeOffset.Parse(sourceType.time).ToUnixTimeSeconds();
             updateType.Price = decimal.Parse(sourceType.price, NumberStyles.Float);
-            updateType.Ask = decimal.Parse(sourceType.ask, NumberStyles.Float);
-            updateType.Bid = decimal.Parse(sourceType.bid, NumberStyles.Float);
+            if (!string.IsNullOrEmpty(sourceType.ask))
+            {
+                updateType.Ask = decimal.Parse(sourceType.ask, NumberStyles.Float); 
+            }
+            if (!string.IsNullOrEmpty(sourceType.bid))
+            {
+                updateType.Bid = decimal.Parse(sourceType.bid, NumberStyles.Float); 
+            }
             updateType.Volume = decimal.Parse(sourceType.volume, NumberStyles.Float);
         }
 
@@ -195,6 +208,15 @@ namespace CryptoKeeper.Domain.Mappers
             updateType.Bid = decimal.Parse(sourceType.bid, NumberStyles.Float);
             updateType.Price = (updateType.Ask + updateType.Bid) / 2;
             updateType.Volume = decimal.Parse(sourceType.volume.First().Value, NumberStyles.Float);
+        }
+
+        public void Update(DataObjects.Dtos.Poloniex.TickerDto sourceType, PricingItem updateType)
+        {
+            updateType.Timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            updateType.Ask = decimal.Parse(sourceType.lowestAsk, NumberStyles.Float);
+            updateType.Bid = decimal.Parse(sourceType.highestBid, NumberStyles.Float);
+            updateType.Price = (updateType.Ask + updateType.Bid) / 2;
+            updateType.Volume = decimal.Parse(sourceType.high24hr, NumberStyles.Float);
         }
     }
 }

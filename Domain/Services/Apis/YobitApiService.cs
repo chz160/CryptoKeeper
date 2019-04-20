@@ -10,6 +10,7 @@ using CryptoKeeper.Domain.DataObjects.Dtos.Yobit;
 using CryptoKeeper.Domain.Enums;
 using CryptoKeeper.Domain.Services.Apis.PricingMonitors;
 using CryptoKeeper.Domain.Services.Interfaces;
+using CryptoKeeper.Entities.Pricing.Models;
 
 namespace CryptoKeeper.Domain.Services.Apis
 {
@@ -18,7 +19,8 @@ namespace CryptoKeeper.Domain.Services.Apis
     {
         private readonly Exchange _exchange;
 
-        public YobitApiService(Exchange exchange)
+        public YobitApiService(Exchange exchange, IConfigService configService, ICryptoCompareDataService cryptoCompareDataService, IServiceProvider serviceProvider)
+            : base(configService, cryptoCompareDataService, serviceProvider)
         {
             _exchange = exchange;
         }

@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using CryptoKeeper.Domain.Builders.Interfaces;
 using CryptoKeeper.Domain.Constants;
 using CryptoKeeper.Domain.DataObjects.Dtos;
 using CryptoKeeper.Domain.Enums;
@@ -13,10 +15,16 @@ namespace CryptoKeeper.Domain.Services.Apis
     public class GeminiApiService : ApiService
     {
         private readonly Exchange _exchange;
+        private readonly IServiceProvider _serviceProvider;
+        private readonly IPricingService _pricingService;
+        private readonly IBuilderFactory _builderFactory;
 
-        public GeminiApiService(Exchange exchange)
+        public GeminiApiService(Exchange exchange, IConfigService configService, ICryptoCompareDataService cryptoCompareDataService, IServiceProvider serviceProvider, IBuilderFactory builderFactory)
+            : base(configService, cryptoCompareDataService, serviceProvider)
         {
             _exchange = exchange;
+            _serviceProvider = serviceProvider;
+            _builderFactory = builderFactory;
         }
 
         public override string Name => ExchangeConstants.Gemini;
@@ -33,7 +41,7 @@ namespace CryptoKeeper.Domain.Services.Apis
         
         public override IAmPricingMonitor MonitorPrices()
         {
-            return new GeminiPricingMonitorService(this, _exchange);
+            return new GeminiPricingMonitorService(this, _exchange, _builderFactory, _serviceProvider);
         }
 
         public override decimal GetBalances(string symbol)

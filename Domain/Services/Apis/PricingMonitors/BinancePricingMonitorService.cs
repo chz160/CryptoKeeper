@@ -2,14 +2,12 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using System.Threading;
-using CryptoKeeper.Domain.Builders.Factories;
 using CryptoKeeper.Domain.Builders.Interfaces;
-using CryptoKeeper.Domain.Constants;
 using CryptoKeeper.Domain.DataObjects.Dtos;
 using CryptoKeeper.Domain.DataObjects.Dtos.Binance;
 using CryptoKeeper.Domain.Services.Interfaces;
 using CryptoKeeper.Domain.Utilities;
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 
 namespace CryptoKeeper.Domain.Services.Apis.PricingMonitors
@@ -19,16 +17,15 @@ namespace CryptoKeeper.Domain.Services.Apis.PricingMonitors
         private readonly IAmAnApiService _apiService;
         private readonly Exchange _exchange;
         private readonly IBuilderFactory _builderFactory;
+        private readonly IServiceProvider _serviceProvider;
         private Dictionary<string, string> _channels;
 
-        public BinancePricingMonitorService(IAmAnApiService apiService, Exchange exchange) : this(apiService, exchange, new BuilderFactory())
-        { }
-
-        public BinancePricingMonitorService(IAmAnApiService apiService, Exchange exchange, IBuilderFactory builderFactory)
+        public BinancePricingMonitorService(IAmAnApiService apiService, Exchange exchange, IBuilderFactory builderFactory, IServiceProvider serviceProvider)
         {
             _apiService = apiService;
             _exchange = exchange;
             _builderFactory = builderFactory;
+            _serviceProvider = serviceProvider;
         }
 
         public void Monitor()
@@ -43,7 +40,7 @@ namespace CryptoKeeper.Domain.Services.Apis.PricingMonitors
             }
             catch (Exception ex)
             {
-
+                Colorful.Console.WriteLine($"Binance Monitor(): {ex.Message}", Color.Red);
             }
         }
 
@@ -51,11 +48,18 @@ namespace CryptoKeeper.Domain.Services.Apis.PricingMonitors
         {
             if (!string.IsNullOrEmpty(message) && message.Contains("\"e\":\"24hrTicker\""))
             {
-                var items = JsonConvert.DeserializeObject<TickerDto>(message);
-                var pricingItem = _builderFactory.Create<TickerDto, PricingItem>(items).Build();
-                var fromSymbol = _channels[items.Symbol.ToUpper()].Split(",")[0];
-                var toSymbol = _channels[items.Symbol.ToUpper()].Split(",")[1];
-                PricingService.Instance.UpdatePricingForMinute(_apiService.Name, fromSymbol, toSymbol, pricingItem);
+                try
+                {
+                    var items = JsonConvert.DeserializeObject<TickerDto>(message);
+                    var pricingItem = _builderFactory.Create<TickerDto, PricingItem>(items).Build();
+                    var fromSymbol = _channels[items.Symbol.ToUpper()].Split(",")[0];
+                    var toSymbol = _channels[items.Symbol.ToUpper()].Split(",")[1];
+                    _serviceProvider.GetRequiredService<IPricingService>().UpdatePricingForMinute(_apiService.Name, fromSymbol, toSymbol, pricingItem);
+                }
+                catch (Exception ex)
+                {
+                    Colorful.Console.WriteLine($"Binance OnMessage(): {ex.Message}", Color.Red);
+                }
             }
         }
 

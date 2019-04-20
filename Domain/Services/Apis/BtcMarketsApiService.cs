@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography;
+﻿using System;
+using System.Security.Cryptography;
 using System.Text;
 using CryptoKeeper.Domain.Constants;
 using CryptoKeeper.Domain.Enums;
@@ -9,6 +10,10 @@ namespace CryptoKeeper.Domain.Services.Apis
 {
     public class BtcMarketsApiService : ApiService
     {
+        public BtcMarketsApiService(IConfigService configService, ICryptoCompareDataService cryptoCompareDataService, IServiceProvider serviceProvider)
+            : base(configService, cryptoCompareDataService, serviceProvider)
+        { }
+
         public override string Name => ExchangeConstants.BtcMarkets;
         public override string PublicUrl => "";
         public override string PrivateUrl => "";

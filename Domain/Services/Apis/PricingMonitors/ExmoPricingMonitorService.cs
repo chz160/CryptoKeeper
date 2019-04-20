@@ -1,12 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
-using System.Threading;
-using CryptoKeeper.Domain.Builders.Factories;
 using CryptoKeeper.Domain.Builders.Interfaces;
 using CryptoKeeper.Domain.Constants;
 using CryptoKeeper.Domain.DataObjects.Dtos;
 using CryptoKeeper.Domain.DataObjects.Dtos.Exmo;
 using CryptoKeeper.Domain.Services.Interfaces;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace CryptoKeeper.Domain.Services.Apis.PricingMonitors
 {
@@ -15,21 +16,20 @@ namespace CryptoKeeper.Domain.Services.Apis.PricingMonitors
         private readonly IAmAnApiService _apiService;
         private readonly Exchange _exchange;
         private readonly IBuilderFactory _builderFactory;
+        private readonly IServiceProvider _serviceProvider;
 
-        public ExmoPricingMonitorService(IAmAnApiService apiService, Exchange exchange) : this(apiService, exchange, new BuilderFactory())
-        { }
-
-        public ExmoPricingMonitorService(IAmAnApiService apiService, Exchange exchange, IBuilderFactory builderFactory)
+        public ExmoPricingMonitorService(IAmAnApiService apiService, Exchange exchange, IBuilderFactory builderFactory, IServiceProvider serviceProvider)
         {
             _apiService = apiService;
             _exchange = exchange;
             _builderFactory = builderFactory;
+            _serviceProvider = serviceProvider;
         }
 
         public void Monitor()
         {
-            //while (true)
-            //{
+            try
+            {
                 var tickers = _apiService.Get<Dictionary<string, TickerDto>>(_apiService.PublicUrl, "/ticker");
                 foreach (var ticker in tickers)
                 {
@@ -43,10 +43,13 @@ namespace CryptoKeeper.Domain.Services.Apis.PricingMonitors
                 foreach (var product in validProducts)
                 {
                     var pricingItem = _builderFactory.Create<TickerDto, PricingItem>(product).Build();
-                    PricingService.Instance.UpdatePricingForMinute(ExchangeConstants.Exmo, product.from_symbol, product.to_symbol, pricingItem);
+                    _serviceProvider.GetRequiredService<IPricingService>().UpdatePricingForMinute(ExchangeConstants.Exmo, product.from_symbol, product.to_symbol, pricingItem);
                 }
-            //    Thread.Sleep(60000);
-            //}
+            }
+            catch (Exception ex)
+            {
+                Colorful.Console.WriteLine($"Exmo Monitor(): {ex.Message}\r\n{ex.StackTrace}", Color.Red);
+            }
         }
     }
 }

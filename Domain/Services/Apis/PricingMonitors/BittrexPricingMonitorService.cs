@@ -1,12 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
-using System.Threading;
-using CryptoKeeper.Domain.Builders.Factories;
 using CryptoKeeper.Domain.Builders.Interfaces;
 using CryptoKeeper.Domain.Constants;
 using CryptoKeeper.Domain.DataObjects.Dtos;
 using CryptoKeeper.Domain.DataObjects.Dtos.BitTrex;
 using CryptoKeeper.Domain.Services.Interfaces;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace CryptoKeeper.Domain.Services.Apis.PricingMonitors
 {
@@ -14,30 +15,32 @@ namespace CryptoKeeper.Domain.Services.Apis.PricingMonitors
     {
         private readonly IAmAnApiService _apiService;
         private readonly IBuilderFactory _builderFactory;
+        private readonly IServiceProvider _serviceProvider;
 
-        public BittrexPricingMonitorService(IAmAnApiService apiService) : this(apiService, new BuilderFactory())
-        { }
-
-        public BittrexPricingMonitorService(IAmAnApiService apiService, IBuilderFactory builderFactory)
+        public BittrexPricingMonitorService(IAmAnApiService apiService, IBuilderFactory builderFactory, IServiceProvider serviceProvider)
         {
             _apiService = apiService;
             _builderFactory = builderFactory;
+            _serviceProvider = serviceProvider;
         }
 
         public void Monitor()
         {
-            //while (true)
-            //{
+            try
+            {
                 //Should probably also use the getticker endpoint as the data is not cached as long and more up-to-date.
                 var response = _apiService.Get<ResponseDto<List<MarketSummaryDto>>>(_apiService.PublicUrl, "/public/getmarketsummaries");
                 var products = response.Result.OrderByDescending(m => m.BaseVolume).ThenByDescending(m => m.Volume).ToList();
                 foreach (var product in products)
                 {
                     var pricingItem = _builderFactory.Create<MarketSummaryDto, PricingItem>(product).Build();
-                    PricingService.Instance.UpdatePricingForMinute(ExchangeConstants.BitTrex, product.MarketCurrency, product.BaseCurrency, pricingItem);
+                    _serviceProvider.GetRequiredService<IPricingService>().UpdatePricingForMinute(ExchangeConstants.BitTrex, product.MarketCurrency, product.BaseCurrency, pricingItem);
                 }
-            //    Thread.Sleep(60000);
-            //}
+            }
+            catch (Exception ex)
+            {
+                Colorful.Console.WriteLine($"Bittrex Monitor(): {ex.Message}\r\n{ex.StackTrace}", Color.Red);
+            }
         }
     }
 }

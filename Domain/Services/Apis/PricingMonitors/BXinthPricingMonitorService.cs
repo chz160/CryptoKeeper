@@ -1,12 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
-using System.Threading;
-using CryptoKeeper.Domain.Builders.Factories;
 using CryptoKeeper.Domain.Builders.Interfaces;
 using CryptoKeeper.Domain.Constants;
 using CryptoKeeper.Domain.DataObjects.Dtos;
 using CryptoKeeper.Domain.DataObjects.Dtos.BXinth;
 using CryptoKeeper.Domain.Services.Interfaces;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace CryptoKeeper.Domain.Services.Apis.PricingMonitors
 {
@@ -15,29 +16,31 @@ namespace CryptoKeeper.Domain.Services.Apis.PricingMonitors
         private readonly IAmAnApiService _apiService;
         private readonly Exchange _exchange;
         private readonly IBuilderFactory _builderFactory;
+        private readonly IServiceProvider _serviceProvider;
 
-        public BXinthPricingMonitorService(IAmAnApiService apiService, Exchange exchange) : this(apiService, exchange, new BuilderFactory())
-        { }
-
-        public BXinthPricingMonitorService(IAmAnApiService apiService, Exchange exchange, IBuilderFactory builderFactory)
+        public BXinthPricingMonitorService(IAmAnApiService apiService, Exchange exchange, IBuilderFactory builderFactory, IServiceProvider serviceProvider)
         {
             _apiService = apiService;
             _exchange = exchange;
             _builderFactory = builderFactory;
+            _serviceProvider = serviceProvider;
         }
 
         public void Monitor()
         {
-            //while (true)
-            //{
-                var markets = _apiService.Get<Dictionary<string, MarketDto>>(_apiService.PublicUrl, "/").Select(m=>m.Value).ToList();
+            try
+            {
+                var markets = _apiService.Get<Dictionary<string, MarketDto>>(_apiService.PublicUrl, "/").Select(m => m.Value).ToList();
                 foreach (var market in markets)
                 {
                     var pricingItem = _builderFactory.Create<MarketDto, PricingItem>(market).Build();
-                    PricingService.Instance.UpdatePricingForMinute(ExchangeConstants.BXinth, market.secondary_currency, market.primary_currency, pricingItem);
+                    _serviceProvider.GetRequiredService<IPricingService>().UpdatePricingForMinute(ExchangeConstants.BXinth, market.secondary_currency, market.primary_currency, pricingItem);
                 }
-            //    Thread.Sleep(60000);
-            //}
+            }
+            catch (Exception ex)
+            {
+                Colorful.Console.WriteLine($"BXinth Monitor(): {ex.Message}\r\n{ex.StackTrace}", Color.Red);
+            }
         }
     }
 }

@@ -1,10 +1,11 @@
-﻿using System.Threading;
-using CryptoKeeper.Domain.Builders.Factories;
+﻿using System;
+using System.Drawing;
 using CryptoKeeper.Domain.Builders.Interfaces;
 using CryptoKeeper.Domain.Constants;
 using CryptoKeeper.Domain.DataObjects.Dtos;
 using CryptoKeeper.Domain.DataObjects.Dtos.Abucoins;
 using CryptoKeeper.Domain.Services.Interfaces;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace CryptoKeeper.Domain.Services.Apis.PricingMonitors
 {
@@ -13,21 +14,20 @@ namespace CryptoKeeper.Domain.Services.Apis.PricingMonitors
         private readonly IAmAnApiService _apiService;
         private readonly Exchange _exchange;
         private readonly IBuilderFactory _builderFactory;
+        private readonly IServiceProvider _serviceProvider;
 
-        public AbucoinsPricingMonitorService(IAmAnApiService apiService, Exchange exchange) : this(apiService, exchange, new BuilderFactory())
-        { }
-
-        public AbucoinsPricingMonitorService(IAmAnApiService apiService, Exchange exchange, IBuilderFactory builderFactory)
+        public AbucoinsPricingMonitorService(IAmAnApiService apiService, Exchange exchange, IBuilderFactory builderFactory, IServiceProvider serviceProvider)
         {
             _apiService = apiService;
             _exchange = exchange;
             _builderFactory = builderFactory;
+            _serviceProvider = serviceProvider;
         }
 
         public void Monitor()
         {
-            //while (true)
-            //{
+            try
+            {
                 foreach (var coin in _exchange.Coins)
                 {
                     foreach (var childCoin in coin.Coins)
@@ -36,12 +36,15 @@ namespace CryptoKeeper.Domain.Services.Apis.PricingMonitors
                         if (product != null)
                         {
                             var pricingItem = _builderFactory.Create<TickerDto, PricingItem>(product).Build();
-                            PricingService.Instance.UpdatePricingForMinute(ExchangeConstants.Abucoins, coin.Symbol, childCoin.Symbol, pricingItem);
+                            _serviceProvider.GetRequiredService<IPricingService>().UpdatePricingForMinute(ExchangeConstants.Abucoins, coin.Symbol, childCoin.Symbol, pricingItem);
                         }
                     }
                 }
-            //    Thread.Sleep(60000);
-            //}
+            }
+            catch (Exception ex)
+            {
+                Colorful.Console.WriteLine($"Abucoins Monitor(): {ex.Message}\r\n{ex.StackTrace}", Color.Red);
+            }
         }
     }
 }

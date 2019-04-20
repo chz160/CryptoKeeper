@@ -4,47 +4,42 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
-using CryptoKeeper.Domain.Builders.Factories;
 using CryptoKeeper.Domain.Builders.Interfaces;
-using CryptoKeeper.Domain.Constants;
 using CryptoKeeper.Domain.DataObjects.Dtos;
 using CryptoKeeper.Domain.DataObjects.Dtos.CryptoCompare;
 using CryptoKeeper.Domain.DataObjects.Params;
 using CryptoKeeper.Domain.Enums;
 using CryptoKeeper.Domain.Extensions;
 using CryptoKeeper.Domain.Services.Apis.PricingMonitors;
-using CryptoKeeper.Domain.Services.Factories;
 using CryptoKeeper.Domain.Services.Interfaces;
+using CryptoKeeper.Entities.Pricing.Models;
+using CryptoKeeper.Entities.Pricing.Models.Interfaces;
 using Newtonsoft.Json.Linq;
 using Quobject.SocketIoClientDotNet.Client;
 using ThreadState = System.Threading.ThreadState;
 
 namespace CryptoKeeper.Domain.Services
 {
-    public sealed partial class PricingService
+    public sealed partial class PricingService : IPricingService
     {
         private Socket _cryptoCompareSocket;
         private readonly object lockObject = new object();
-        private static readonly Lazy<PricingService> lazy = new Lazy<PricingService>(() => new PricingService());
         private readonly ConcurrentDictionary<string, List<PricingItem>> _coinPricing = new ConcurrentDictionary<string, List<PricingItem>>();
         private readonly ConcurrentDictionary<string, string[]> _currentCryptoCompareRows = new ConcurrentDictionary<string, string[]>();
-        private readonly ConcurrentDictionary<string, List<WithdrawalFee>> _withdrawalFees = new ConcurrentDictionary<string, List<WithdrawalFee>>();
         private readonly IList<Thread> _threads;
         private readonly ICryptoCompareDataService _cryptoCompareDataService;
         private readonly IMathService _mathService;
         private readonly IBuilderFactory _builderFactory;
+        private readonly IPricingContext _pricingContext;
+        private readonly IExchangeApiServiceFactory _exchangeApiServiceFactory;
         private System.Timers.Timer _timer;
 
-        public static PricingService Instance => lazy.Value;
-
-        private PricingService() : this(new CryptoCompareDataService(), new MathService(), new BuilderFactory())
-        { }
-
-        private PricingService(ICryptoCompareDataService cryptoCompareDataService, IMathService mathService, IBuilderFactory builderFactory)
+        public PricingService(ICryptoCompareDataService cryptoCompareDataService, IMathService mathService, IBuilderFactory builderFactory, IPricingContext pricingContext, IExchangeApiServiceFactory exchangeApiServiceFactory)
         {
             _threads = new List<Thread>();
             _builderFactory = builderFactory;
+            _pricingContext = pricingContext;
+            _exchangeApiServiceFactory = exchangeApiServiceFactory;
             _cryptoCompareDataService = cryptoCompareDataService;
             _mathService = mathService;
         }
@@ -165,7 +160,7 @@ namespace CryptoKeeper.Domain.Services
                 //    }
                 //}
 
-                var apiService = new ExchangeApiServiceFactory().Create(exchange);
+                var apiService = _exchangeApiServiceFactory.Create(exchange);
                 var priceMonitor = apiService.MonitorPrices();
                 if (priceMonitor.GetType() != typeof(NullMonitorService) && apiService.PricingApiType == PricingApiType.WebSocket)
                 {
@@ -201,18 +196,9 @@ namespace CryptoKeeper.Domain.Services
             //ListenToCryptoCompareTicker(exchangePairParam.Exchanges);
 
             Console.WriteLine("Done.");
-
-            var primeTimeout = DateTime.Now.AddMinutes(15);
-            while (DateTime.Now < primeTimeout)
-            {
-                Console.Write($"Letting exchange data prime for {(primeTimeout - DateTime.Now):mm\\:ss}\r");
-                Task.Delay(1000).Wait();
-            }
-            PrintPrimingReport(exchangePairParam.Exchanges);
-            Console.WriteLine("Primed.");
         }
 
-        private void PrintPrimingReport(List<Exchange> exchanges)
+        public void PrintPrimingReport(List<Exchange> exchanges)
         {
             Console.WriteLine($"Priming complete.");
             Colorful.Console.WriteLine("--------------------------------------------------------------------------------------", Color.Yellow);
@@ -250,7 +236,7 @@ namespace CryptoKeeper.Domain.Services
         {
             foreach (var exchange in exchanges)
             {
-                var apiService = new ExchangeApiServiceFactory().Create(exchange);
+                var apiService = _exchangeApiServiceFactory.Create(exchange);
                 var priceMonitor = apiService.MonitorPrices();
                 if (priceMonitor.GetType() != typeof(NullMonitorService) && apiService.PricingApiType == PricingApiType.Rest)
                 {
@@ -328,18 +314,26 @@ namespace CryptoKeeper.Domain.Services
             Console.WriteLine("Done.");
         }
 
+        public void PrimeWithdrawalFeeList(List<Exchange> exchanges)
+        {
+            foreach (var exchange in exchanges)
+            {
+                GetWithdrawalFeesForExchange(_exchangeApiServiceFactory.Create(exchange));
+            }
+        }
+
         public List<WithdrawalFee> GetWithdrawalFeesForExchange(IAmAnApiService api)
         {
-            if (!_withdrawalFees.ContainsKey(api.Name))
+            if (!_pricingContext.WithdrawalFees.Any(m => m.Key == api.Name && m.CreatedDate > DateTime.Now.AddDays(-1)))
             {
-                _withdrawalFees[api.Name] = new List<WithdrawalFee>();
+                _pricingContext.WithdrawalFees.RemoveRange(_pricingContext.WithdrawalFees.Where(m => m.Key == api.Name));
+                _pricingContext.SaveChanges();
+                var fees = api.GetWithdrawalFees();
+                fees.ForEach(f => { f.Key = api.Name; });
+                _pricingContext.WithdrawalFees.AddRange(fees);
+                _pricingContext.SaveChanges();
             }
-
-            if (_withdrawalFees[api.Name] == null || !_withdrawalFees[api.Name].Any())
-            {
-                _withdrawalFees[api.Name] = api.GetWithdrawalFees();
-            }
-            return _withdrawalFees[api.Name];
+            return _pricingContext.WithdrawalFees.Where(m => m.Key == api.Name).ToList();
         }
 
         public decimal GetWithdrawalFeesForExchangeAndSymbol(IAmAnApiService api, string symbol)
@@ -347,19 +341,34 @@ namespace CryptoKeeper.Domain.Services
             if (api == null) throw new Exception("Api cannot be null.");
             var withdrawalFees = GetWithdrawalFeesForExchange(api);
             if (withdrawalFees == null) throw new Exception($"No withdrawal fees found for {api.Name}.");
-            if (withdrawalFees.Any() && withdrawalFees.All(m => m.Symbol != symbol)) throw new Exception($"Cannot find withdrawal fees for {symbol} on {api.Name}.");
+            if (withdrawalFees.Any() && withdrawalFees.All(m => m.Symbol != symbol)) return GetAverageFeeForCoinAcrossExchanges(symbol);//throw new Exception($"Cannot find withdrawal fees for {symbol} on {api.Name}.");
             return withdrawalFees.First(m => m.Symbol == symbol).Fee;
         }
 
         public decimal GetWithdrawalFeesForExchangeAndSymbol(Exchange exchange, string symbol)
         {
-            var api = new ExchangeApiServiceFactory().Create(exchange);
+            var api = _exchangeApiServiceFactory.Create(exchange);
             return GetWithdrawalFeesForExchangeAndSymbol(api, symbol);
+        }
+
+        public decimal GetAverageFeeForCoinAcrossExchanges(string symbol)
+        {
+            //var withdrawalFeesForSymbol = new List<decimal>();
+            //foreach (var withdrawalFeeList in _withdrawalFees.Values)
+            //{
+            //    var withdrawalFee = withdrawalFeeList.FirstOrDefault(m => m.Symbol == symbol && m.Fee > 0);
+            //    if (withdrawalFee != null)
+            //    {
+            //        withdrawalFeesForSymbol.Add(withdrawalFee.Fee);
+            //    }
+            //}
+            var average = _pricingContext.WithdrawalFees.Where(m => m.Symbol == symbol && m.Fee > 0).Average(m => m.Fee);
+            return average;
         }
 
         public decimal GetTakerFeeForExchange(Exchange exchange)
         {
-            var api = new ExchangeApiServiceFactory().Create(exchange);
+            var api = _exchangeApiServiceFactory.Create(exchange);
             return api.TakerFee;
         }
         
@@ -391,7 +400,9 @@ namespace CryptoKeeper.Domain.Services
                         var currentTicker = _builderFactory.Create<SocketDataWrapperDto, TickerDto>(wrappedData).Build();
                         //Console.WriteLine(JsonConvert.SerializeObject(currentTicker));
                         var pricingItem = _builderFactory.Create<TickerDto, PricingItem>(currentTicker).Build();
-                        PricingService.Instance.UpdatePricingForMinute(currentTicker.Market, currentTicker.FromSymbol, currentTicker.ToSymbol, pricingItem);
+        //TODO: This used to be PricingService.Instance.UpdatePricingForMinute so this might not work correctly;
+                        UpdatePricingForMinute(currentTicker.Market, currentTicker.FromSymbol, currentTicker.ToSymbol, pricingItem);
+                        
                         _currentCryptoCompareRows[key] = wrappedData.PreviousData != null ? wrappedData.PreviousData : wrappedData.Data;
                     }
                 }
@@ -401,7 +412,7 @@ namespace CryptoKeeper.Domain.Services
         private List<string> BuildCryptoTickerSubscriptionParameters(List<Exchange> exchanges)
         {
             var results = new List<string>();
-            foreach (var exchange in exchanges.Where(m=> new ExchangeApiServiceFactory().Create(m).PricingApiType == PricingApiType.CryptoCompare))
+            foreach (var exchange in exchanges.Where(m=> _exchangeApiServiceFactory.Create(m).PricingApiType == PricingApiType.CryptoCompare))
             {
                 foreach (var coin in exchange.Coins)
                 {

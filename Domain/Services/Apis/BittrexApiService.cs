@@ -5,18 +5,30 @@ using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using CryptoKeeper.Domain.Builders.Factories;
+using CryptoKeeper.Domain.Builders.Interfaces;
 using CryptoKeeper.Domain.Constants;
 using CryptoKeeper.Domain.DataObjects.Dtos;
 using CryptoKeeper.Domain.DataObjects.Dtos.BitTrex;
 using CryptoKeeper.Domain.Enums;
 using CryptoKeeper.Domain.Services.Apis.PricingMonitors;
 using CryptoKeeper.Domain.Services.Interfaces;
+using CryptoKeeper.Entities.Pricing.Models;
 
 namespace CryptoKeeper.Domain.Services.Apis
 {
     //Docs https://bittrex.com/home/api
     public class BitTrexApiService : ApiService
     {
+        private readonly IServiceProvider _serviceProvider;
+        private readonly IBuilderFactory _builderFactory;
+
+        public BitTrexApiService(IConfigService configService, ICryptoCompareDataService cryptoCompareDataService, IServiceProvider serviceProvider, IBuilderFactory builderFactory)
+            : base(configService, cryptoCompareDataService, serviceProvider)
+        {
+            _serviceProvider = serviceProvider;
+            _builderFactory = builderFactory;
+        }
+
         public override string Name => ExchangeConstants.BitTrex;
         public override string PublicUrl => "https://bittrex.com/api/v1.1";
         public override string PrivateUrl => PublicUrl;
@@ -38,7 +50,7 @@ namespace CryptoKeeper.Domain.Services.Apis
 
         public override IAmPricingMonitor MonitorPrices()
         {
-            return new BittrexPricingMonitorService(this);
+            return new BittrexPricingMonitorService(this, _builderFactory, _serviceProvider);
         }
 
         public override decimal MakerFee => 0.0025m;

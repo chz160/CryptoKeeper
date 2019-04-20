@@ -1,4 +1,5 @@
-﻿using CryptoKeeper.Domain.Services.Interfaces;
+﻿using System;
+using CryptoKeeper.Domain.Services.Interfaces;
 
 namespace CryptoKeeper.Domain.Services
 {
@@ -7,25 +8,25 @@ namespace CryptoKeeper.Domain.Services
         /// <summary>
         /// Percentage difference for the same coin between two exchanges.
         /// </summary>
-        /// <param name="fromValue">Value from the source exchange.</param>
-        /// <param name="toValue">Value from the target exchange.</param>
+        /// <param name="valueA">Value from the source exchange.</param>
+        /// <param name="valueB">Value from the target exchange.</param>
         /// <returns>
         /// Percent difference. 1 being 100%, 0.01 being 1%. 
-        /// When fromValue is lower than toValue the return
-        /// will be negative. This is good.
+        /// When valueA is larger than valueB the return
+        /// will be negative. This is bad.
         /// </returns>
-        public decimal PercentDiff(decimal fromValue, decimal toValue)
+        public decimal PercentDiff(decimal valueA, decimal valueB)
         {
-            if (fromValue > toValue)
+            if (valueA > valueB)
             {
-                //if the toValue is larger than fromValue,
+                //if the valueA is larger than valueB,
                 //reverse the numbers so the division works
                 //and we get a decimal style percent, then
-                //invert the negative so we have a positive
+                //invert the value so we have a negative
                 //result and can act accordingly.
-                return PercentDiff(toValue, fromValue) * -1;
+                return PercentDiff(valueB, valueA) * -1;
             }
-            return (fromValue / toValue) - 1;
+            return 1 - (valueA / valueB);
         }
 
         public int FindNumbersPosition(decimal number, decimal low, decimal high, int numberOfPositions)
@@ -55,6 +56,11 @@ namespace CryptoKeeper.Domain.Services
                 return number * -1;
             }
             return number;
+        }
+
+        public string FormatPercent(decimal percent)
+        {
+            return $"{decimal.Round(percent * 100, 2, MidpointRounding.ToEven)}%";
         }
     }
 }

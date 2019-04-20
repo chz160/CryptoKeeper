@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using CryptoKeeper.Domain.DataObjects.Dtos;
 using CryptoKeeper.Domain.Mappers.Interfaces;
+using CryptoKeeper.Entities.Pricing.Models;
 
 namespace CryptoKeeper.Domain.Mappers
 {

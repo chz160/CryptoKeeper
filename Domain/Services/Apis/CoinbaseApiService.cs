@@ -3,20 +3,31 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
+using CryptoKeeper.Domain.Builders.Interfaces;
 using CryptoKeeper.Domain.Constants;
 using CryptoKeeper.Domain.DataObjects.Dtos;
 using CryptoKeeper.Domain.DataObjects.Dtos.Coinbase;
 using CryptoKeeper.Domain.Enums;
 using CryptoKeeper.Domain.Services.Apis.PricingMonitors;
 using CryptoKeeper.Domain.Services.Interfaces;
+using CryptoKeeper.Entities.Pricing.Models;
 
 namespace CryptoKeeper.Domain.Services.Apis
 {
     //Docs https://docs.gdax.com/?javascript#api
     public class CoinbaseApiService : ApiService
     {
+        private readonly IServiceProvider _serviceProvider;
+        private readonly IBuilderFactory _builderFactory;
+
+        public CoinbaseApiService(IConfigService configService, ICryptoCompareDataService cryptoCompareDataService, IServiceProvider serviceProvider, IBuilderFactory builderFactory)
+            : base(configService, cryptoCompareDataService, serviceProvider)
+        {
+            _serviceProvider = serviceProvider;
+            _builderFactory = builderFactory;
+        }
+
         public override string Name => ExchangeConstants.Coinbase;
         public override string PublicUrl => "https://api.gdax.com";
         public override string PrivateUrl => PublicUrl;
@@ -44,7 +55,7 @@ namespace CryptoKeeper.Domain.Services.Apis
 
         public override IAmPricingMonitor MonitorPrices()
         {
-            return new CoinbasePricingMonitorService(this);
+            return new CoinbasePricingMonitorService(this, _builderFactory, _serviceProvider);
         }
 
         public override decimal MakerFee => 0;
