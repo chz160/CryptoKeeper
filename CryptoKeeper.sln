@@ -1,4 +1,4 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27130.2010
@@ -14,7 +14,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TrackBack", "TrackBack\Trac
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnitTests", "UnitTests\UnitTests.csproj", "{1A6AA58C-7715-4A1D-84D0-66678DE68CFC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Entities.Pricing", "Entities\Entities.Pricing.csproj", "{E89E3954-9C3D-4BA4-B334-282A5BC7EB25}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Entities.Pricing", "Entities\Entities.Pricing.csproj", "{E89E3954-9C3D-4BA4-B334-282A5BC7EB25}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
